@@ -470,7 +470,7 @@ public class ServerManager {
     	timgetProps.setProperty(Config.KEYSPACE + Config.RELATIVE_URL_BASE, urls.getRelativeUrlBase());
     	timgetProps.setProperty(Config.KEYSPACE + Config.DATA_CACHE_EXPIRATION, "0");
 
-        new TIMGetTool("install " + name + "-u", timgetProps);
+        new TIMGetTool("install " + name + " -u", timgetProps);
 
         // This is a bit of hack, but without some mods to tim-get I'm not sure how to determine the version
         File src = new File(getTimGetModulesDir() + "/org/terracotta/modules/" + name);
