@@ -29,6 +29,11 @@
       <version>${tc-api.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.terracotta</groupId>
+      <artifactId>tc-cargo-core-uberjar</artifactId>
+      <version>0.9.20091124</version>
+    </dependency>    
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.2</version>
