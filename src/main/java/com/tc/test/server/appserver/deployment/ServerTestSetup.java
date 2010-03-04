@@ -75,7 +75,7 @@ public class ServerTestSetup extends TestSetup {
   public boolean shouldDisable() {
     for (Enumeration e = ((TestSuite) fTest).tests(); e.hasMoreElements();) {
       Object o = e.nextElement();
-      if (o instanceof AbstractDeploymentTest && ((AbstractDeploymentTest) o).shouldDisable()) { return true; }
+      if (o instanceof AbstractDeploymentTestCase && ((AbstractDeploymentTestCase) o).shouldDisable()) { return true; }
     }
     return false;
   }

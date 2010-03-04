@@ -24,7 +24,7 @@ import java.util.Map;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-public abstract class AbstractDeploymentTest extends TCTestCase {
+public abstract class AbstractDeploymentTestCase extends TCTestCase {
 
   protected Log         logger              = LogFactory.getLog(getClass());
 
@@ -34,10 +34,10 @@ public abstract class AbstractDeploymentTest extends TCTestCase {
   private final List    disabledJavaVersion = new ArrayList();
 
   public static Test suite() {
-    return new ErrorTestSetup(new TestSuite(AbstractDeploymentTest.class));
+    return new ErrorTestSetup(new TestSuite(AbstractDeploymentTestCase.class));
   }
 
-  public AbstractDeploymentTest() {
+  public AbstractDeploymentTestCase() {
     //
   }
 
