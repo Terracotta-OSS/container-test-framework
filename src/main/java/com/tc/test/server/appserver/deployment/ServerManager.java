@@ -64,8 +64,8 @@ public class ServerManager {
 
   // The internal repository is listed first since it is the preferred repo
   private static final TimGetUrls[]   TIM_GET_URLS   = {
-      new TimGetUrls("http://forge-dev.terracotta.lan/api/2/index.xml.gz", "http://forge-dev.terracotta.lan/repo"),
       new TimGetUrls("http://kong.terracotta.lan/maven2/tim-get/2/index.xml.gz", "http://kong.terracotta.lan/maven2"),
+      new TimGetUrls("http://forge-dev.terracotta.lan/api/2/index.xml.gz", "http://forge-dev.terracotta.lan/repo"),
       new TimGetUrls("http://forge.terracotta.org/api/2/index.xml.gz",
                      "http://www.terracotta.org/download/reflector/maven2") };
 
@@ -470,7 +470,7 @@ public class ServerManager {
     	timgetProps.setProperty(Config.KEYSPACE + Config.RELATIVE_URL_BASE, urls.getRelativeUrlBase());
     	timgetProps.setProperty(Config.KEYSPACE + Config.DATA_CACHE_EXPIRATION, "0");
 
-        new TIMGetTool("install " + name + "-u", timgetProps);
+        new TIMGetTool("install " + name + " -u", timgetProps);
 
         // This is a bit of hack, but without some mods to tim-get I'm not sure how to determine the version
         File src = new File(getTimGetModulesDir() + "/org/terracotta/modules/" + name);
@@ -484,7 +484,7 @@ public class ServerManager {
         Banner.infoBanner("Repository location not available [" + urls.getUrl()
                           + "] for tim-get, moving on to the next one");
       } catch (ModuleNotFoundException e) {
-    	Banner.infoBanner("Module " + name + " couldn't be found on this repo + " + urls.getUrl() + ", trying the next one");
+    	Banner.infoBanner("Module " + name + " couldn't be found on this repo " + urls.getUrl() + ", trying the next one");
       } catch (Exception e) {
         Banner.errorBanner("Unexpected error using url [" + urls.getUrl() + "] for tim-get, trying the next one");
         e.printStackTrace();
