@@ -51,11 +51,11 @@ public abstract class CargoAppServer extends AbstractAppServer {
     System.setProperty(CARGO_JAVA, CARGO_JAVA_CLASS);
   }
 
-  public CargoAppServer(AppServerInstallation installation) {
+  public CargoAppServer(final AppServerInstallation installation) {
     super(installation);
   }
 
-  public final ServerResult start(ServerParameters rawParams) throws Exception {
+  public final ServerResult start(final ServerParameters rawParams) throws Exception {
     StandardAppServerParameters params = (StandardAppServerParameters) rawParams;
 
     adjustParams(params);
@@ -88,11 +88,11 @@ public abstract class CargoAppServer extends AbstractAppServer {
     return new AppServerResult(port, this);
   }
 
-  protected void adjustParams(StandardAppServerParameters params) throws Exception {
+  protected void adjustParams(final StandardAppServerParameters params) throws Exception {
     // override if desired
   }
 
-  public final void stop() {
+  public final void stop(final ServerParameters rawParams) {
     if (container != null) {
       if (container.getState().equals(State.STARTED) || container.getState().equals(State.STARTING)
           || container.getState().equals(State.UNKNOWN)) {
@@ -113,7 +113,7 @@ public abstract class CargoAppServer extends AbstractAppServer {
     }
   }
 
-  private void addWars(LocalConfiguration config, Map wars, String instanceName) {
+  private void addWars(final LocalConfiguration config, final Map wars, final String instanceName) {
     WAR warapp = null;
     for (Iterator it = wars.entrySet().iterator(); it.hasNext();) {
       Map.Entry entry = (Entry) it.next();
@@ -129,10 +129,10 @@ public abstract class CargoAppServer extends AbstractAppServer {
 
   /**
    * Create a linked java process {@link LinkedJavaProcessPollingAgent}
-   * 
+   *
    * @throws InterruptedException
    */
-  private void linkJavaProcess(File instance) throws InterruptedException {
+  private void linkJavaProcess(final File instance) throws InterruptedException {
     linkedPort = HeartBeatService.listenPort();
     Link.put(new CargoJava.Args(linkedPort, instance));
   }
@@ -145,11 +145,11 @@ public abstract class CargoAppServer extends AbstractAppServer {
 
   protected abstract InstalledLocalContainer container(LocalConfiguration config, AppServerParameters params);
 
-  protected void setConfigProperties(LocalConfiguration config) throws Exception {
+  protected void setConfigProperties(final LocalConfiguration config) throws Exception {
     // do nothing
   }
 
-  protected void setExtraClasspath(AppServerParameters params) {
+  protected void setExtraClasspath(final AppServerParameters params) {
     // do nothing
   }
 

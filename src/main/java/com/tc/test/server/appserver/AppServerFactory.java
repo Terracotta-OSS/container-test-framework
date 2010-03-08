@@ -9,6 +9,7 @@ import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
 import com.tc.test.server.appserver.glassfishv1.GlassfishV1AppServerFactory;
 import com.tc.test.server.appserver.glassfishv2.GlassfishV2AppServerFactory;
+import com.tc.test.server.appserver.glassfishv3.GlassfishV3AppServerFactory;
 import com.tc.test.server.appserver.jboss3x.JBoss3xAppServerFactory;
 import com.tc.test.server.appserver.jboss42x.JBoss42xAppServerFactory;
 import com.tc.test.server.appserver.jboss4x.JBoss4xAppServerFactory;
@@ -33,13 +34,13 @@ import java.util.Properties;
  */
 public abstract class AppServerFactory {
 
-  protected AppServerFactory(ProtectedKey protectedKey) {
+  protected AppServerFactory(final ProtectedKey protectedKey) {
     Assert.assertNotNull(protectedKey);
   }
 
   public abstract AppServerParameters createParameters(String instanceName, Properties props);
 
-  public AppServerParameters createParameters(String instanceName) {
+  public AppServerParameters createParameters(final String instanceName) {
     return createParameters(instanceName, new Properties());
   }
 
@@ -82,6 +83,7 @@ public abstract class AppServerFactory {
       case AppServerInfo.GLASSFISH:
         if ("v1".equals(majorVersion)) return new GlassfishV1AppServerFactory(new ProtectedKey());
         if ("v2".equals(majorVersion)) return new GlassfishV2AppServerFactory(new ProtectedKey());
+        if ("v3".equals(majorVersion)) return new GlassfishV3AppServerFactory(new ProtectedKey());
         break;
       case AppServerInfo.JETTY:
         if ("6".equals(majorVersion)) return new Jetty6xAppServerFactory(new ProtectedKey());

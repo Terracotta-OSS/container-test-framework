@@ -4,23 +4,36 @@
  */
 package com.tc.test.server.appserver.glassfishv2;
 
+import com.tc.test.server.appserver.AppServerParameters;
 import com.tc.test.server.appserver.glassfish.AbstractGlassfishAppServer;
 import com.tc.test.server.appserver.glassfish.GlassfishAppServerInstallation;
 
+import java.io.File;
 import java.util.List;
 
 public class GlassfishV2AppServer extends AbstractGlassfishAppServer {
 
-  public GlassfishV2AppServer(GlassfishAppServerInstallation installation) {
+  public GlassfishV2AppServer(final GlassfishAppServerInstallation installation) {
     super(installation);
   }
 
-  protected String[] getDisplayCommand(String script) {
+  @Override
+  protected String[] getDisplayCommand(final String script, final AppServerParameters params) {
     return new String[] { script, "cli", "display" };
   }
 
-  protected void modifyStartupCommand(List cmd) {
+  @Override
+  protected void modifyStartupCommand(final List cmd) {
     cmd.add(0, "-Dcom.sun.aas.promptForIdentity=true");
   }
 
+  @Override
+  protected File getStartScript(final AppServerParameters params) {
+    return getInstanceFile("bin/" + getPlatformScript("startserv"));
+  }
+
+  @Override
+  protected File getStopScript(final AppServerParameters params) {
+    return getInstanceFile("bin/" + getPlatformScript("stopserv"));
+  }
 }

@@ -67,23 +67,23 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   private static final String JAVA_CMD           = System.getProperty("java.home") + File.separator + "bin"
                                                    + File.separator + "java";
 
-  private static final String ADMIN_USER         = "admin";
+  protected static final String ADMIN_USER         = "admin";
   private static final String PASSWD             = "password";
   private static final String PINGWAR            = "ping";
 
   private static final long   START_STOP_TIMEOUT = 1000 * 300;
-  private final PortChooser   pc                 = new PortChooser();
-  private final int           httpPort           = pc.chooseRandomPort();
-  private final int           adminPort          = pc.chooseRandomPort();
+  protected final PortChooser   pc                 = new PortChooser();
+  protected final int           httpPort           = pc.chooseRandomPort();
+  protected final int           adminPort          = pc.chooseRandomPort();
   private File                passwdFile;
   private Thread              runner;
   private File                instanceDir;
 
-  public AbstractGlassfishAppServer(GlassfishAppServerInstallation installation) {
+  public AbstractGlassfishAppServer(final GlassfishAppServerInstallation installation) {
     super(installation);
   }
 
-  private synchronized File getPasswdFile() throws IOException {
+  protected synchronized File getPasswdFile() throws IOException {
     if (passwdFile == null) {
       passwdFile = File.createTempFile("passwd", "");
       passwdFile.deleteOnExit();
@@ -109,12 +109,12 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     return passwdFile;
   }
 
-  private static String getPlatformScript(String name) {
+  protected static String getPlatformScript(final String name) {
     if (Os.isWindows()) { return name + ".bat"; }
     return name;
   }
 
-  private void createDomain(AppServerParameters params) throws Exception {
+  protected void createDomain(final AppServerParameters params) throws Exception {
     File asAdminScript = getAsadminScript();
 
     List cmd = new ArrayList();
@@ -143,26 +143,26 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     if (result.getExitCode() != 0) { throw new RuntimeException(result.toString()); }
   }
 
-  private static void checkFile(File file) {
+  protected static void checkFile(final File file) {
     if (!file.isFile()) { throw new RuntimeException(file.getAbsolutePath() + " is not a file or does not exist"); }
     if (!file.canRead()) { throw new RuntimeException(file.getAbsolutePath() + " cannot be read"); }
   }
 
-  private File getInstanceFile(String path) {
+  protected File getInstanceFile(final String path) {
     Assert.assertNotNull(instanceDir);
     File f = new File(instanceDir, path);
     checkFile(f);
     return f;
   }
 
-  private File getAsadminScript() {
+  protected File getAsadminScript() {
     File glassfishInstall = this.serverInstallDirectory();
     File asAdminScript = new File(new File(glassfishInstall, "bin"), getPlatformScript("asadmin"));
     checkFile(asAdminScript);
     return asAdminScript;
   }
 
-  public ServerResult start(ServerParameters rawParams) throws Exception {
+  public ServerResult start(final ServerParameters rawParams) throws Exception {
     AppServerParameters params = (AppServerParameters) rawParams;
     for (int i = 0; i < STARTUP_RETRIES; i++) {
       try {
@@ -176,7 +176,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     throw new RuntimeException("Failed to start server in " + STARTUP_RETRIES + " attempts");
   }
 
-  private ServerResult start0(AppServerParameters params) throws Exception {
+  private ServerResult start0(final AppServerParameters params) throws Exception {
     instanceDir = createInstance(params);
 
     instanceDir.delete(); // createDomain will fail if directory already exists
@@ -236,7 +236,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     return new AppServerResult(httpPort, this);
   }
 
-  private static boolean amxDebugCheck(File nodeLogFile) throws IOException {
+  private static boolean amxDebugCheck(final File nodeLogFile) throws IOException {
     // see DEV-1722
     List<CharSequence> hits = Grep.grep("^Caused by: java.lang.NullPointerException$", nodeLogFile);
     List<CharSequence> hits2 = Grep.grep("^\tat com.sun.appserv.management.base.AMXDebug.getDebug", nodeLogFile);
@@ -274,7 +274,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     }
   }
 
-  private String getAppInstanceStatus(AppServerParameters params) throws Exception {
+  private String getAppInstanceStatus(final AppServerParameters params) throws Exception {
     File asAdminScript = getAsadminScript();
     List cmd = new ArrayList();
     cmd.add(asAdminScript.getAbsolutePath());
@@ -333,7 +333,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     }
   }
 
-  private void deployWars(Process process, File nodeLogFile, Map wars) throws Exception {
+  private void deployWars(final Process process, final File nodeLogFile, final Map wars) throws Exception {
     for (Iterator iter = wars.entrySet().iterator(); iter.hasNext();) {
       Map.Entry entry = (Entry) iter.next();
       String warName = (String) entry.getKey();
@@ -346,13 +346,13 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     deployWar(PINGWAR, createPingWarFile(PINGWAR + ".war"), process, nodeLogFile);
   }
 
-  private File createPingWarFile(String warName) throws Exception {
+  private File createPingWarFile(final String warName) throws Exception {
     DeploymentBuilder builder = new WARBuilder(warName, new File(sandboxDirectory(), "war"));
     builder.addResourceFullpath("/com/tc/test/server/appserver/glassfish", "index.html", "index.html");
     return builder.makeDeployment().getFileSystemPath().getFile();
   }
 
-  private void deployWar(String warName, File warFile, Process process, File nodeLogFile) throws IOException, Exception {
+  private void deployWar(final String warName, final File warFile, final Process process, final File nodeLogFile) throws IOException, Exception {
     System.err.println("Deploying war [" + warName + "] on " + instanceDir.getName());
 
     List cmd = new ArrayList();
@@ -385,12 +385,17 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     throw new RuntimeException("Deploy failed for " + warName + ": " + result);
   }
 
-  abstract protected String[] getDisplayCommand(String script);
 
-  private String[] getStartupCommand(AppServerParameters params) throws Exception {
-    File startScript = getInstanceFile("bin/" + getPlatformScript("startserv"));
+  abstract protected File getStartScript(AppServerParameters params);
 
-    String[] displayCommand = getDisplayCommand(startScript.getAbsolutePath());
+  abstract protected File getStopScript(AppServerParameters params);
+
+  abstract protected String[] getDisplayCommand(String script, AppServerParameters params);
+
+  private String[] getStartupCommand(final AppServerParameters params) throws Exception {
+    File startScript = getStartScript(params);
+
+    String[] displayCommand = getDisplayCommand(startScript.getAbsolutePath(), params);
     if (Os.isUnix()) {
       // This is an attempt to workaround "cannot execute" IOExceptions we see on the monkey
       // The problem does NOT appear to be a lack of having execute permission on the script
@@ -405,6 +410,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     if (result.getExitCode() != 0) { throw new RuntimeException("error executing startserv script: " + result); }
 
     String output = result.getStdout().trim();
+
+    System.err.println(output);
 
     if (!output.startsWith("STARTOFCOMMAND|") || !output.endsWith("|ENDOFCOMMAND|")) { throw new RuntimeException(
                                                                                                                   "cannot parse output: "
@@ -449,11 +456,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     return (String[]) cmd.toArray(new String[] {});
   }
 
-  protected void modifyStartupCommand(List cmd) {
+  protected void modifyStartupCommand(final List cmd) {
     //
   }
 
-  private void modifyDomainConfig(AppServerParameters params) throws Exception {
+  private void modifyDomainConfig(final AppServerParameters params) throws Exception {
     File domainXML = getInstanceFile("config/domain.xml");
 
     System.err.println("Modifying domain configuration at " + domainXML.getAbsolutePath());
@@ -496,7 +503,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     FileUtils.writeStringToFile(domainXML, sw.toString(), "UTF-8");
   }
 
-  private void appendDSOParams(Document doc, Node node, AppServerParameters params) {
+  private void appendDSOParams(final Document doc, final Node node, final AppServerParameters params) {
     String[] jvmArgs = params.jvmArgs().replaceAll("'", "").split("\\s");
 
     for (String arg : jvmArgs) {
@@ -512,10 +519,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     node.appendChild(element);
   }
 
-  public void stop() throws Exception {
+  public void stop(final ServerParameters rawParams) throws Exception {
+    AppServerParameters params = (AppServerParameters) rawParams;
     System.err.println("Stopping instance on port " + httpPort + "...");
 
-    File stopScript = getInstanceFile("bin/" + getPlatformScript("stopserv"));
+    File stopScript = getStopScript(params);
     Result result = Exec.execute(new String[] { stopScript.getAbsolutePath() }, null, null, stopScript.getParentFile());
     if (result.getExitCode() != 0) {
       System.err.println(result);
@@ -533,7 +541,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   }
 
   private static class RetryException extends Exception {
-    RetryException(String msg) {
+    RetryException(final String msg) {
       super(msg);
     }
   }
@@ -543,7 +551,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     private final AppServerParameters delegate;
     private final int                 retryNum;
 
-    ParamsWithRetry(AppServerParameters delegate, int retryNum) {
+    ParamsWithRetry(final AppServerParameters delegate, final int retryNum) {
       this.delegate = delegate;
       this.retryNum = retryNum;
     }
