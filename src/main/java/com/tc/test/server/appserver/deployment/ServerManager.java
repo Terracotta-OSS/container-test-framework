@@ -460,7 +460,6 @@ public class ServerManager {
     }
 
     for (TimGetUrls urls : TIM_GET_URLS) {
-      System.out.println("Trying index: " + urls.getUrl());
       try {
     	Properties timgetProps = new Properties();
     	
