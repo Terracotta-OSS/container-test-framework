@@ -4,26 +4,6 @@
  */
 package com.tc.test.server.appserver.deployment;
 
-import org.terracotta.modules.tool.config.Config;
-import org.terracotta.modules.tool.exception.ModuleNotFoundException;
-import org.terracotta.modules.tool.exception.RemoteIndexIOException;
-import org.terracotta.tools.cli.TIMGetTool;
-
-import com.tc.logging.TCLogger;
-import com.tc.logging.TCLogging;
-import com.tc.test.AppServerInfo;
-import com.tc.test.TestConfigObject;
-import com.tc.test.server.appserver.AppServerFactory;
-import com.tc.test.server.appserver.AppServerInstallation;
-import com.tc.test.server.util.AppServerUtil;
-import com.tc.text.Banner;
-import com.tc.util.PortChooser;
-import com.tc.util.ProductInfo;
-import com.tc.util.TIMUtil;
-import com.tc.util.TcConfigBuilder;
-import com.tc.util.runtime.Os;
-import com.tc.util.runtime.Vm;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +20,26 @@ import java.util.Properties;
 
 import junit.framework.Assert;
 
+import org.terracotta.modules.tool.config.Config;
+import org.terracotta.modules.tool.exception.ModuleNotFoundException;
+import org.terracotta.modules.tool.exception.RemoteIndexIOException;
+import org.terracotta.tools.cli.TIMGetTool;
+
+import com.tc.logging.TCLogger;
+import com.tc.logging.TCLogging;
+import com.tc.test.AppServerInfo;
+import com.tc.test.TestConfigObject;
+import com.tc.test.server.appserver.AppServerFactory;
+import com.tc.test.server.appserver.AppServerInstallation;
+import com.tc.test.server.util.AppServerUtil;
+import com.tc.test.server.util.TimUtil;
+import com.tc.text.Banner;
+import com.tc.util.PortChooser;
+import com.tc.util.ProductInfo;
+import com.tc.util.TcConfigBuilder;
+import com.tc.util.runtime.Os;
+import com.tc.util.runtime.Vm;
+
 public class ServerManager {
 
   private static final String SESSION_TIM_TESTS_PROPERTIES = "/com/tctest/session-tim/tests.properties";
@@ -48,7 +48,7 @@ public class ServerManager {
     private final String url;
     private final String relativeUrlBase;
 
-    public TimGetUrls(String url, String relativeUrlBase) {
+    public TimGetUrls(final String url, final String relativeUrlBase) {
       this.url = url;
       this.relativeUrlBase = relativeUrlBase;
     }
@@ -91,7 +91,7 @@ public class ServerManager {
 
   private static int                  serverCounter  = 0;
 
-  public ServerManager(final Class testClass, Collection extraJvmArgs) throws Exception {
+  public ServerManager(final Class testClass, final Collection extraJvmArgs) throws Exception {
     config = TestConfigObject.getInstance();
     factory = AppServerFactory.createFactoryFromProperties();
     installDir = config.appserverServerInstallDir();
@@ -116,7 +116,7 @@ public class ServerManager {
   }
 
   private boolean determineSessionMethod() {
-    InputStream in = TIMUtil.class.getResourceAsStream(SESSION_TIM_TESTS_PROPERTIES);
+    InputStream in = TimUtil.class.getResourceAsStream(SESSION_TIM_TESTS_PROPERTIES);
     if (in == null) {
       // no properties supplied, use tim-get to find the session TIM(
       Banner
@@ -126,7 +126,7 @@ public class ServerManager {
     return false;
   }
 
-  public void addServerToStop(Stoppable stoppable) {
+  public void addServerToStop(final Stoppable stoppable) {
     getServersToStop().add(0, stoppable);
   }
 
@@ -156,11 +156,11 @@ public class ServerManager {
     return false;
   }
 
-  void start(boolean withPersistentStore) throws Exception {
+  void start(final boolean withPersistentStore) throws Exception {
     startDSO(withPersistentStore);
   }
 
-  private void startDSO(boolean withPersistentStore) throws Exception {
+  private void startDSO(final boolean withPersistentStore) throws Exception {
     File workDir = new File(tempDir, "dso-server-" + serverCounter++);
     workDir.mkdirs();
     dsoServer = new DSOServer(withPersistentStore, workDir, serverTcConfig);
@@ -186,7 +186,7 @@ public class ServerManager {
     addServerToStop(dsoServer);
   }
 
-  public void restartDSO(boolean withPersistentStore) throws Exception {
+  public void restartDSO(final boolean withPersistentStore) throws Exception {
     logger.debug("Restarting DSO server : " + dsoServer);
     dsoServer.stop();
     startDSO(withPersistentStore);
@@ -195,11 +195,11 @@ public class ServerManager {
   /**
    * tcConfigResourcePath: resource path
    */
-  public WebApplicationServer makeWebApplicationServer(String tcConfigResourcePath) throws Exception {
+  public WebApplicationServer makeWebApplicationServer(final String tcConfigResourcePath) throws Exception {
     return makeWebApplicationServer(new TcConfigBuilder(tcConfigResourcePath));
   }
 
-  public WebApplicationServer makeWebApplicationServer(TcConfigBuilder tcConfigBuilder) throws Exception {
+  public WebApplicationServer makeWebApplicationServer(final TcConfigBuilder tcConfigBuilder) throws Exception {
     int i = ServerManager.appServerIndex++;
 
     WebApplicationServer appServer = new GenericServer(config, factory, installation,
@@ -218,7 +218,7 @@ public class ServerManager {
 
   }
 
-  public FileSystemPath getTcConfigFile(String tcConfigPath) {
+  public FileSystemPath getTcConfigFile(final String tcConfigPath) {
     URL url = getClass().getResource(tcConfigPath);
     Assert.assertNotNull("could not find: " + tcConfigPath, url);
     Assert.assertTrue("should be file:" + url.toString(), url.toString().startsWith("file:"));
@@ -226,7 +226,7 @@ public class ServerManager {
     return pathToTcConfigFile;
   }
 
-  private TcConfigBuilder prepareClientTcConfig(TcConfigBuilder clientConfig) throws IOException {
+  private TcConfigBuilder prepareClientTcConfig(final TcConfigBuilder clientConfig) throws IOException {
     TcConfigBuilder aCopy = clientConfig.copy();
     aCopy.setTcConfigFile(tcConfigFile);
     aCopy.setDsoPort(getServerTcConfig().getDsoPort());
@@ -244,9 +244,11 @@ public class ServerManager {
         AppServerInfo info = config.appServerInfo();
         String major = info.getMajor();
         if (major.equals("v1")) {
-          aCopy.addModule(TIMUtil.GLASSFISH_V1, resolveContainerTIM(TIMUtil.GLASSFISH_V1));
+          aCopy.addModule(TimUtil.GLASSFISH_V1, resolveContainerTIM(TimUtil.GLASSFISH_V1));
         } else if (major.equals("v2")) {
-          aCopy.addModule(TIMUtil.GLASSFISH_V2, resolveContainerTIM(TIMUtil.GLASSFISH_V2));
+          aCopy.addModule(TimUtil.GLASSFISH_V2, resolveContainerTIM(TimUtil.GLASSFISH_V2));
+        } else if (major.equals("v3")) {
+          aCopy.addModule(TimUtil.GLASSFISH_V3, resolveContainerTIM(TimUtil.GLASSFISH_V3));
         } else {
           throw new RuntimeException("unexpected version: " + info);
         }
@@ -257,7 +259,7 @@ public class ServerManager {
         String major = info.getMajor();
         String minor = info.getMinor();
         if (major.equals("6") || minor.startsWith("1.")) {
-          aCopy.addModule(TIMUtil.JETTY_6_1, resolveContainerTIM(TIMUtil.JETTY_6_1));
+          aCopy.addModule(TimUtil.JETTY_6_1, resolveContainerTIM(TimUtil.JETTY_6_1));
         } else {
           throw new RuntimeException("unexpected version: " + info);
         }
@@ -268,7 +270,7 @@ public class ServerManager {
         String major = info.getMajor();
         String minor = info.getMinor();
         if (major.equals("1") && minor.startsWith("0.")) {
-          aCopy.addModule(TIMUtil.WASCE_1_0, resolveContainerTIM(TIMUtil.WASCE_1_0));
+          aCopy.addModule(TimUtil.WASCE_1_0, resolveContainerTIM(TimUtil.WASCE_1_0));
         } else {
           throw new RuntimeException("unexpected version: " + info);
         }
@@ -278,9 +280,9 @@ public class ServerManager {
         AppServerInfo info = config.appServerInfo();
         String major = info.getMajor();
         if (major.equals("9")) {
-          aCopy.addModule(TIMUtil.WEBLOGIC_9, resolveContainerTIM(TIMUtil.WEBLOGIC_9));
+          aCopy.addModule(TimUtil.WEBLOGIC_9, resolveContainerTIM(TimUtil.WEBLOGIC_9));
         } else if (major.equals("10")) {
-          aCopy.addModule(TIMUtil.WEBLOGIC_10, resolveContainerTIM(TIMUtil.WEBLOGIC_10));
+          aCopy.addModule(TimUtil.WEBLOGIC_10, resolveContainerTIM(TimUtil.WEBLOGIC_10));
         } else {
           throw new RuntimeException("unexpected major version: " + info);
         }
@@ -292,21 +294,21 @@ public class ServerManager {
         String minor = info.getMinor();
         if (major.equals("5")) {
           if (minor.startsWith("1.")) {
-            aCopy.addModule(TIMUtil.JBOSS_5_1, resolveContainerTIM(TIMUtil.JBOSS_5_1));
+            aCopy.addModule(TimUtil.JBOSS_5_1, resolveContainerTIM(TimUtil.JBOSS_5_1));
           } else {
             throw new RuntimeException("unexpected version: " + info);
           }
         } else if (major.equals("4")) {
           if (minor.startsWith("0.")) {
-            aCopy.addModule(TIMUtil.JBOSS_4_0, resolveContainerTIM(TIMUtil.JBOSS_4_0));
+            aCopy.addModule(TimUtil.JBOSS_4_0, resolveContainerTIM(TimUtil.JBOSS_4_0));
           } else if (minor.startsWith("2.")) {
-            aCopy.addModule(TIMUtil.JBOSS_4_2, resolveContainerTIM(TIMUtil.JBOSS_4_2));
+            aCopy.addModule(TimUtil.JBOSS_4_2, resolveContainerTIM(TimUtil.JBOSS_4_2));
           } else {
             throw new RuntimeException("unexpected version: " + info);
           }
         } else if (major.equals("3")) {
           if (minor.startsWith("2.")) {
-            aCopy.addModule(TIMUtil.JBOSS_3_2, resolveContainerTIM(TIMUtil.JBOSS_3_2));
+            aCopy.addModule(TimUtil.JBOSS_3_2, resolveContainerTIM(TimUtil.JBOSS_3_2));
           } else {
             throw new RuntimeException("unexpected version: " + info);
           }
@@ -321,15 +323,15 @@ public class ServerManager {
         String minor = info.getMinor();
         if (major.equals("5")) {
           if (minor.startsWith("0.")) {
-            aCopy.addModule(TIMUtil.TOMCAT_5_0, resolveContainerTIM(TIMUtil.TOMCAT_5_0));
+            aCopy.addModule(TimUtil.TOMCAT_5_0, resolveContainerTIM(TimUtil.TOMCAT_5_0));
           } else if (minor.startsWith("5.")) {
-            aCopy.addModule(TIMUtil.TOMCAT_5_5, resolveContainerTIM(TIMUtil.TOMCAT_5_5));
+            aCopy.addModule(TimUtil.TOMCAT_5_5, resolveContainerTIM(TimUtil.TOMCAT_5_5));
           } else {
             throw new RuntimeException("unexpected 5.x version: " + info);
           }
         } else if (major.equals("6")) {
           if (minor.startsWith("0.")) {
-            aCopy.addModule(TIMUtil.TOMCAT_6_0, resolveContainerTIM(TIMUtil.TOMCAT_6_0));
+            aCopy.addModule(TimUtil.TOMCAT_6_0, resolveContainerTIM(TimUtil.TOMCAT_6_0));
           } else {
             throw new RuntimeException("unexpected 6.x version: " + info);
           }
@@ -344,7 +346,7 @@ public class ServerManager {
         String minor = info.getMinor();
         if (major.equals("3")) {
           if (minor.startsWith("0.") || minor.startsWith("1.")) {
-            aCopy.addModule(TIMUtil.RESIN_3_1, resolveContainerTIM(TIMUtil.RESIN_3_1));
+            aCopy.addModule(TimUtil.RESIN_3_1, resolveContainerTIM(TimUtil.RESIN_3_1));
           } else {
             throw new RuntimeException("unexpected minor version: " + info);
           }
@@ -360,7 +362,7 @@ public class ServerManager {
     return aCopy;
   }
 
-  void setServersToStop(List serversToStop) {
+  void setServersToStop(final List serversToStop) {
     this.serversToStop = serversToStop;
   }
 
@@ -368,7 +370,7 @@ public class ServerManager {
     return serversToStop;
   }
 
-  public DeploymentBuilder makeDeploymentBuilder(String warFileName) {
+  public DeploymentBuilder makeDeploymentBuilder(final String warFileName) {
     return new WARBuilder(warFileName, warDir, config);
   }
 
@@ -413,7 +415,7 @@ public class ServerManager {
            + ", warDir=" + warDir.getAbsolutePath() + ", jvmArgs=" + jvmArgs + '}';
   }
 
-  private String resolveContainerTIM(String name) {
+  private String resolveContainerTIM(final String name) {
     String ver = resolved.get(name);
     if (ver != null) { return ver; }
 
@@ -422,7 +424,7 @@ public class ServerManager {
     return ver;
   }
 
-  private String internalResolve(String name) {
+  private String internalResolve(final String name) {
     if (useTimGet) {
       try {
         return runTimGet(name);
@@ -434,7 +436,7 @@ public class ServerManager {
 
     Properties props = new Properties();
     try {
-      props.load(TIMUtil.class.getResourceAsStream(SESSION_TIM_TESTS_PROPERTIES));
+      props.load(com.tc.test.server.util.TimUtil.class.getResourceAsStream(SESSION_TIM_TESTS_PROPERTIES));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -450,7 +452,7 @@ public class ServerManager {
     return sandoxModules.getAbsolutePath();
   }
 
-  private String runTimGet(String name) throws Exception {
+  private String runTimGet(final String name) throws Exception {
     String mavenArtifactsVersion = ProductInfo.getInstance().mavenArtifactsVersion();
     if (mavenArtifactsVersion.equals(ProductInfo.UNKNOWN_VALUE)) {
       // One way this happens is when spring tests are run from eclipse (which can most likely be fixed BTW)

@@ -13,7 +13,7 @@ import com.tc.util.TcConfigBuilder;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-public abstract class AbstractOneServerDeploymentTest extends AbstractDeploymentTest {
+public abstract class AbstractOneServerDeploymentTest extends AbstractDeploymentTestCase {
   public WebApplicationServer server0;
 
   public AbstractOneServerDeploymentTest() {

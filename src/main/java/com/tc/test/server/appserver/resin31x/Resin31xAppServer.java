@@ -48,16 +48,16 @@ public final class Resin31xAppServer extends AbstractAppServer {
   private int                 cluster_port       = 0;
   private Thread              runner             = null;
 
-  public Resin31xAppServer(Resin31xAppServerInstallation installation) {
+  public Resin31xAppServer(final Resin31xAppServerInstallation installation) {
     super(installation);
   }
 
-  public ServerResult start(ServerParameters parameters) throws Exception {
+  public ServerResult start(final ServerParameters parameters) throws Exception {
     AppServerParameters params = (AppServerParameters) parameters;
     return startResin(params);
   }
 
-  public void stop() throws Exception {
+  public void stop(final ServerParameters rawParams) throws Exception {
     final String[] cmd = new String[] { JAVA_CMD, "-jar",
         this.serverInstallDirectory() + File.separator + "lib" + File.separator + "resin.jar", "stop", "-conf",
         configFile };
@@ -79,7 +79,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
 
   }
 
-  private ServerResult startResin(AppServerParameters params) throws Exception {
+  private ServerResult startResin(final AppServerParameters params) throws Exception {
     prepareDeployment(params);
 
     List cmd = new ArrayList();
@@ -119,7 +119,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
     return new AppServerResult(resin_port, this);
   }
 
-  private void prepareDeployment(AppServerParameters params) throws Exception {
+  private void prepareDeployment(final AppServerParameters params) throws Exception {
     instanceName = params.instanceName();
     instanceDir = new File(sandboxDirectory(), instanceName);
     ensureDirectory(instanceDir);
@@ -150,7 +150,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
     createConfigFile(params.jvmArgs().replaceAll("'", "").split("\\s+"));
   }
 
-  private static void ensureDirectory(File dir) throws Exception {
+  private static void ensureDirectory(final File dir) throws Exception {
     if (!dir.exists() && dir.mkdirs() == false) { throw new Exception("Can't create directory ("
                                                                       + dir.getAbsolutePath()); }
   }
@@ -163,7 +163,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
     return new File(instanceDir, "conf");
   }
 
-  private void createConfigFile(String[] jvmargs) throws IOException {
+  private void createConfigFile(final String[] jvmargs) throws IOException {
     File confFile = new File(getConfDirectory(), "resin.conf");
     configFile = confFile.getAbsolutePath();
     copyResource("resin.conf", confFile);
@@ -177,7 +177,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
     replaceToken("@resin.extra.jvmargs@", resinExtraJvmArgs.toString(), confFile);
   }
 
-  private void copyResource(String name, File dest) throws IOException {
+  private void copyResource(final String name, final File dest) throws IOException {
     InputStream in = getClass().getResourceAsStream(name);
     FileOutputStream out = new FileOutputStream(dest);
     try {
@@ -188,7 +188,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
     }
   }
 
-  private void replaceToken(String token, String value, File file) {
+  private void replaceToken(final String token, final String value, final File file) {
     Replace replaceTask = new Replace();
     replaceTask.setProject(new Project());
     replaceTask.setFile(file);

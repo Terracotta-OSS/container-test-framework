@@ -82,7 +82,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
   private static final String LOG_CAT              = "WASCE 1.0 STARTUP";
   private String              instanceName;
 
-  public Wasce1xAppServer(Wasce1xAppServerInstallation installation) {
+  public Wasce1xAppServer(final Wasce1xAppServerInstallation installation) {
     super(installation);
   }
 
@@ -90,7 +90,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     return serverInstallDirectory();
   }
 
-  public synchronized ServerResult start(ServerParameters rawParams) throws Exception {
+  public synchronized ServerResult start(final ServerParameters rawParams) throws Exception {
     TestConfigObject config = TestConfigObject.getInstance();
     AppServerParameters params = (AppServerParameters) rawParams;
     int port = AppServerUtil.getPort();
@@ -131,6 +131,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     final String logFileName = new File(instance.getParent(), instance.getName() + ".log").getAbsolutePath();
 
     Thread t = new Thread() {
+      @Override
       public void run() {
         FileOutputStream logFile = null;
         try {
@@ -161,7 +162,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     return new AppServerResult(port, this);
   }
 
-  private void waitForStartup(int port) throws Exception {
+  private void waitForStartup(final int port) throws Exception {
     final ClassLoader prevLoader = Thread.currentThread().getContextClassLoader();
     final long timeout = System.currentTimeMillis() + STARTUP_TIMEOUT;
 
@@ -181,7 +182,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     }
   }
 
-  private void deployWars(Map wars) throws Exception {
+  private void deployWars(final Map wars) throws Exception {
     Assert.assertNotNull(wars);
 
     for (Iterator iter = wars.values().iterator(); iter.hasNext();) {
@@ -208,7 +209,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     }
   }
 
-  public synchronized void stop() throws Exception {
+  public synchronized void stop(final ServerParameters rawParams) throws Exception {
     Assert.assertTrue(rmiPort > 0);
     StringBuffer cl = new StringBuffer(JAVA_CMD + " -jar ");
     cl.append(installPath + File.separator + SHUTDOWN_JAR);
@@ -221,14 +222,14 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     consoleLogger.info("Server shutdown: " + rmiPort, LOG_CAT);
   }
 
-  private void copyInstanceDirectories(File home, File instance) throws IOException {
+  private void copyInstanceDirectories(final File home, final File instance) throws IOException {
     String sep = File.separator;
     FileUtils.copyDirectory(new File(home + sep + CONFIG_STORE), new File(instance + sep + CONFIG_STORE), false);
     FileUtils.copyDirectory(new File(home + sep + REPOSITORY), new File(instance + sep + REPOSITORY), false);
     FileUtils.copyDirectory(new File(home + sep + VAR), new File(instance + sep + VAR), false);
   }
 
-  private void parseConfig(File configDir, int port) throws Exception {
+  private void parseConfig(final File configDir, final int port) throws Exception {
     File tmpConfig = new File(configDir + File.separator + "tmp_config.xml");
     File config = new File(configDir + File.separator + CONFIG);
     BufferedReader reader = new BufferedReader(new FileReader(config));
@@ -277,7 +278,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     tmpConfig.renameTo(config);
   }
 
-  private void interpretJarManifest(File jar) throws IOException {
+  private void interpretJarManifest(final File jar) throws IOException {
     String absPath = jar.getCanonicalFile().getParentFile().getParent().replace('\\', '/');
     Manifest manifest = new JarFile(jar).getManifest();
     Attributes attrib = manifest.getMainAttributes();

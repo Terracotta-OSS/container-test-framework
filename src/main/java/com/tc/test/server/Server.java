@@ -10,5 +10,5 @@ public interface Server {
 
   ServerResult start(ServerParameters parameters) throws Exception;
 
-  void stop() throws Exception;
+  void stop(ServerParameters parameters) throws Exception;
 }

@@ -76,8 +76,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private final String                      serverInstanceName;
   private final File                        tcConfigFile;
 
-  public GenericServer(TestConfigObject config, AppServerFactory factory, AppServerInstallation installation,
-                       File tcConfigFile, int serverId, File tempDir) throws Exception {
+  public GenericServer(final TestConfigObject config, final AppServerFactory factory, final AppServerInstallation installation,
+                       final File tcConfigFile, final int serverId, final File tempDir) throws Exception {
     this.factory = factory;
     this.installation = installation;
     this.rmiRegistryPort = AppServerUtil.getPort();
@@ -162,7 +162,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     return ((Boolean) dsoEnabled.get()).booleanValue();
   }
 
-  public static void setDsoEnabled(boolean b) {
+  public static void setDsoEnabled(final boolean b) {
     dsoEnabled.set(Boolean.valueOf(b));
   }
 
@@ -175,7 +175,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     return result.serverPort();
   }
 
-  private void enableDebug(int serverId) {
+  private void enableDebug(final int serverId) {
     if (GC_LOGGING && !Vm.isIBM()) {
       parameters.appendJvmArgs("-verbose:gc");
       parameters.appendJvmArgs("-XX:+PrintGCDetails");
@@ -196,7 +196,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   }
 
   private class RMIProxyBuilder implements ProxyBuilder {
-    public Object createProxy(Class serviceType, String url, Map initialContext) throws Exception {
+    public Object createProxy(final Class serviceType, final String url, final Map initialContext) throws Exception {
       String rmiURL = "rmi://localhost:" + rmiRegistryPort + "/" + url;
       LOG.debug("Getting proxy for: " + rmiRegistryPort + " on " + result.serverPort());
       Exception e = null;
@@ -219,7 +219,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   public class HttpInvokerProxyBuilder implements ProxyBuilder {
     private HttpClient client;
 
-    public Object createProxy(Class serviceType, String url, Map initialContext) throws Exception {
+    public Object createProxy(final Class serviceType, final String url, final Map initialContext) throws Exception {
       String serviceURL = "http://localhost:" + result.serverPort() + "/" + url;
       LOG.debug("Getting proxy for: " + serviceURL);
       HttpInvokerProxyFactoryBean prfb = new HttpInvokerProxyFactoryBean();
@@ -249,19 +249,19 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       return client;
     }
 
-    public void setClient(HttpClient client) {
+    public void setClient(final HttpClient client) {
       this.client = client;
     }
   }
 
-  public Object getProxy(Class serviceType, String url) throws Exception {
+  public Object getProxy(final Class serviceType, final String url) throws Exception {
     if (this.proxyBuilder != null) { return proxyBuilder.createProxy(serviceType, url, null); }
     Map initCtx = new HashMap();
     initCtx.put(ProxyBuilder.EXPORTER_TYPE_KEY, RmiServiceExporter.class);
     return getProxy(serviceType, url, initCtx);
   }
 
-  public Object getProxy(Class serviceType, String url, Map initialContext) throws Exception {
+  public Object getProxy(final Class serviceType, final String url, final Map initialContext) throws Exception {
     Class exporterClass = (Class) initialContext.get(ProxyBuilder.EXPORTER_TYPE_KEY);
     this.proxyBuilder = (ProxyBuilder) proxyBuilderMap.get(exporterClass);
     return this.proxyBuilder.createProxy(serviceType, url, initialContext);
@@ -272,7 +272,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     return jmxConnectorProxy.getMBeanServerConnection();
   }
 
-  public WebApplicationServer addWarDeployment(Deployment warDeployment, String context) {
+  public WebApplicationServer addWarDeployment(final Deployment warDeployment, final String context) {
     parameters.addWar(context, warDeployment.getFileSystemPath().getFile());
     return this;
   }
@@ -286,7 +286,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     }
   }
 
-  private void dumpThreadsAndRethrow(Exception e) throws Exception {
+  private void dumpThreadsAndRethrow(final Exception e) throws Exception {
     try {
       ThreadDump.dumpAllJavaProcesses(3, 1000);
     } catch (Throwable t) {
@@ -299,7 +299,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   @Override
   protected void doStop() throws Exception {
     try {
-      server.stop();
+      server.stop(parameters);
     } catch (Exception e) {
       dumpThreadsAndRethrow(e);
     }
@@ -308,14 +308,14 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   /**
    * url: /<CONTEXT>/<MAPPING>?params=etc
    */
-  public WebResponse ping(String url) throws MalformedURLException, IOException, SAXException {
+  public WebResponse ping(final String url) throws MalformedURLException, IOException, SAXException {
     return ping(url, new WebConversation());
   }
 
   /**
    * url: /<CONTEXT>/<MAPPING>?params=etc
    */
-  public WebResponse ping(String url, WebConversation wc) throws MalformedURLException, IOException, SAXException {
+  public WebResponse ping(final String url, final WebConversation wc) throws MalformedURLException, IOException, SAXException {
     String fullURL = "http://localhost:" + result.serverPort() + url;
     LOG.debug("Getting page: " + fullURL);
 
@@ -326,21 +326,21 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     return response;
   }
 
-  public void redeployWar(Deployment warDeployment, String context) {
+  public void redeployWar(final Deployment warDeployment, final String context) {
     getRemoteDeployer().redeploy(makeWar(context, warDeployment.getFileSystemPath()));
   }
 
-  public void deployWar(Deployment warDeployment, String context) {
+  public void deployWar(final Deployment warDeployment, final String context) {
     getRemoteDeployer().deploy(makeWar(context, warDeployment.getFileSystemPath()));
   }
 
-  public void undeployWar(Deployment warDeployment, String context) {
+  public void undeployWar(final Deployment warDeployment, final String context) {
     getRemoteDeployer().undeploy(makeWar(context, warDeployment.getFileSystemPath()));
   }
 
   // TODO - CARGO specific code
 
-  private WAR makeWar(String warContext, FileSystemPath warPath) {
+  private WAR makeWar(final String warContext, final FileSystemPath warPath) {
     WAR war = new WAR(warPath.toString());
     war.setContext(warContext);
     war.setLogger(new SimpleLogger());

@@ -52,16 +52,16 @@ public class Jetty6xAppServer extends AbstractAppServer {
   private int                  stop_port          = 0;
   private Thread               runner             = null;
 
-  public Jetty6xAppServer(Jetty6xAppServerInstallation installation) {
+  public Jetty6xAppServer(final Jetty6xAppServerInstallation installation) {
     super(installation);
   }
 
-  public ServerResult start(ServerParameters parameters) throws Exception {
+  public ServerResult start(final ServerParameters parameters) throws Exception {
     AppServerParameters params = (AppServerParameters) parameters;
     return startJetty(params);
   }
 
-  public void stop() throws Exception {
+  public void stop(final ServerParameters rawParams) throws Exception {
     final String[] cmd = new String[] { JAVA_CMD, "-DSTOP.PORT=" + stop_port, "-DSTOP.KEY=" + STOP_KEY, "-jar",
         "start.jar", "--stop" };
 
@@ -82,7 +82,7 @@ public class Jetty6xAppServer extends AbstractAppServer {
 
   }
 
-  private AppServerResult startJetty(AppServerParameters params) throws Exception {
+  private AppServerResult startJetty(final AppServerParameters params) throws Exception {
     prepareDeployment(params);
 
     // Find the jetty-terracotta module jar
@@ -142,7 +142,7 @@ public class Jetty6xAppServer extends AbstractAppServer {
     return new AppServerResult(jetty_port, this);
   }
 
-  private void prepareDeployment(AppServerParameters params) throws Exception {
+  private void prepareDeployment(final AppServerParameters params) throws Exception {
     instanceName = params.instanceName();
     instanceDir = new File(sandboxDirectory(), instanceName);
     ensureDirectory(instanceDir);
@@ -180,7 +180,7 @@ public class Jetty6xAppServer extends AbstractAppServer {
     createConfigFile();
   }
 
-  private void writeContextFile(File war, String context) throws IOException {
+  private void writeContextFile(final File war, final String context) throws IOException {
     String warShortName = war.getName().toLowerCase().replace(".war", "");
 
     FileOutputStream fos = null;
@@ -192,7 +192,7 @@ public class Jetty6xAppServer extends AbstractAppServer {
     }
   }
 
-  private static void ensureDirectory(File dir) throws Exception {
+  private static void ensureDirectory(final File dir) throws Exception {
     if (!dir.exists() && dir.mkdirs() == false) { throw new Exception("Can't create directory ("
                                                                       + dir.getAbsolutePath()); }
   }
@@ -256,7 +256,7 @@ public class Jetty6xAppServer extends AbstractAppServer {
     }
   }
 
-  private String jettyXmlAddition(String workerName) {
+  private String jettyXmlAddition(final String workerName) {
     String s = "";
     s += "  <Set name=\"sessionIdManager\">\n";
     s += "    <New id=\"tcIdMgr\" class=\"org.mortbay.terracotta.servlet.TerracottaSessionIdManager\">\n";
@@ -272,7 +272,7 @@ public class Jetty6xAppServer extends AbstractAppServer {
     return s;
   }
 
-  private static String contextFile(String warFile, String contextPath) {
+  private static String contextFile(final String warFile, final String contextPath) {
     String s = "<?xml version=\"1.0\"  encoding=\"ISO-8859-1\"?>\n";
     s += "<Configure class=\"org.mortbay.jetty.webapp.WebAppContext\">\n";
     s += "  <Set name=\"contextPath\">/" + contextPath + "</Set>\n";
