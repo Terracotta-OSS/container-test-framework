@@ -5,7 +5,7 @@
   <parent>
     <artifactId>forge-parent</artifactId>
     <groupId>org.terracotta.forge</groupId>
-    <version>1.0.17</version>
+    <version>1.0.18</version>
   </parent>
 
   <groupId>org.terracotta.test</groupId>
