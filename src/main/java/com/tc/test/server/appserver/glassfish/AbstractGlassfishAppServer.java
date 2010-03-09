@@ -4,37 +4,6 @@
  */
 package com.tc.test.server.appserver.glassfish;
 
-import org.apache.commons.io.FileUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import com.meterware.httpunit.WebConversation;
-import com.meterware.httpunit.WebResponse;
-import org.apache.xalan.xsltc.trax.TransformerFactoryImpl;
-import com.tc.lcp.CargoLinkedChildProcess;
-import com.tc.lcp.HeartBeatService;
-import com.tc.process.Exec;
-import com.tc.process.Exec.Result;
-import com.tc.test.TestConfigObject;
-import com.tc.test.server.ServerParameters;
-import com.tc.test.server.ServerResult;
-import com.tc.test.server.appserver.AbstractAppServer;
-import com.tc.test.server.appserver.AppServerParameters;
-import com.tc.test.server.appserver.AppServerResult;
-import com.tc.test.server.appserver.ValveDefinition;
-import com.tc.test.server.appserver.deployment.DeploymentBuilder;
-import com.tc.test.server.appserver.deployment.WARBuilder;
-import com.tc.test.server.util.AppServerUtil;
-import com.tc.text.Banner;
-import com.tc.util.Assert;
-import com.tc.util.Grep;
-import com.tc.util.PortChooser;
-import com.tc.util.concurrent.ThreadUtil;
-import com.tc.util.runtime.Os;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -57,27 +26,58 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.xalan.xsltc.trax.TransformerFactoryImpl;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import com.meterware.httpunit.WebConversation;
+import com.meterware.httpunit.WebResponse;
+import com.tc.lcp.CargoLinkedChildProcess;
+import com.tc.lcp.HeartBeatService;
+import com.tc.process.Exec;
+import com.tc.process.Exec.Result;
+import com.tc.test.TestConfigObject;
+import com.tc.test.server.ServerParameters;
+import com.tc.test.server.ServerResult;
+import com.tc.test.server.appserver.AbstractAppServer;
+import com.tc.test.server.appserver.AppServerParameters;
+import com.tc.test.server.appserver.AppServerResult;
+import com.tc.test.server.appserver.ValveDefinition;
+import com.tc.test.server.appserver.deployment.DeploymentBuilder;
+import com.tc.test.server.appserver.deployment.WARBuilder;
+import com.tc.test.server.util.AppServerUtil;
+import com.tc.test.server.util.RetryException;
+import com.tc.text.Banner;
+import com.tc.util.Assert;
+import com.tc.util.Grep;
+import com.tc.util.PortChooser;
+import com.tc.util.concurrent.ThreadUtil;
+import com.tc.util.runtime.Os;
+
 /**
  * Glassfish AppServer implementation
  */
 public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
-  private static final int    STARTUP_RETRIES    = 3;
+  public static final int     STARTUP_RETRIES    = 3;
 
-  private static final String JAVA_CMD           = System.getProperty("java.home") + File.separator + "bin"
-                                                   + File.separator + "java";
+  public static final String  JAVA_CMD           = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
 
-  protected static final String ADMIN_USER         = "admin";
-  private static final String PASSWD             = "password";
-  private static final String PINGWAR            = "ping";
+  public static final String  ADMIN_USER         = "admin";
+  public static final String  PASSWD             = "password";
+  public static final String  PINGWAR            = "ping";
 
-  private static final long   START_STOP_TIMEOUT = 1000 * 300;
-  protected final PortChooser   pc                 = new PortChooser();
-  protected final int           httpPort           = pc.chooseRandomPort();
-  protected final int           adminPort          = pc.chooseRandomPort();
-  private File                passwdFile;
-  private Thread              runner;
-  private File                instanceDir;
+  public static final long    START_STOP_TIMEOUT = 1000 * 300;
+  protected final PortChooser pc                 = new PortChooser();
+  protected final int         httpPort           = pc.chooseRandomPort();
+  protected final int         adminPort          = pc.chooseRandomPort();
+  protected File              passwdFile;
+  protected Thread            runner;
+  protected File              instanceDir;
 
   public AbstractGlassfishAppServer(final GlassfishAppServerInstallation installation) {
     super(installation);
@@ -110,7 +110,9 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   }
 
   protected static String getPlatformScript(final String name) {
-    if (Os.isWindows()) { return name + ".bat"; }
+    if (Os.isWindows()) {
+      return name + ".bat";
+    }
     return name;
   }
 
@@ -132,20 +134,26 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     cmd.add(String.valueOf(httpPort));
     cmd.add("--savemasterpassword=true");
     cmd.add("--domainproperties");
-    cmd.add("jms.port=" + pc.chooseRandomPort() + ":" + "orb.listener.port=" + pc.chooseRandomPort() + ":"
-            + "http.ssl.port=" + pc.chooseRandomPort() + ":" + "orb.ssl.port=" + pc.chooseRandomPort() + ":"
-            + "orb.mutualauth.port=" + pc.chooseRandomPort() + ":" + "domain.jmxPort=" + pc.chooseRandomPort());
+    cmd.add("jms.port=" + pc.chooseRandomPort() + ":" + "orb.listener.port=" + pc.chooseRandomPort() + ":" + "http.ssl.port="
+        + pc.chooseRandomPort() + ":" + "orb.ssl.port=" + pc.chooseRandomPort() + ":" + "orb.mutualauth.port=" + pc.chooseRandomPort()
+        + ":" + "domain.jmxPort=" + pc.chooseRandomPort());
     cmd.add("--savelogin=true");
     cmd.add(params.instanceName());
 
     Result result = Exec.execute((String[]) cmd.toArray(new String[] {}), null, null, asAdminScript.getParentFile());
 
-    if (result.getExitCode() != 0) { throw new RuntimeException(result.toString()); }
+    if (result.getExitCode() != 0) {
+      throw new RuntimeException(result.toString());
+    }
   }
 
   protected static void checkFile(final File file) {
-    if (!file.isFile()) { throw new RuntimeException(file.getAbsolutePath() + " is not a file or does not exist"); }
-    if (!file.canRead()) { throw new RuntimeException(file.getAbsolutePath() + " cannot be read"); }
+    if (!file.isFile()) {
+      throw new RuntimeException(file.getAbsolutePath() + " is not a file or does not exist");
+    }
+    if (!file.canRead()) {
+      throw new RuntimeException(file.getAbsolutePath() + " cannot be read");
+    }
   }
 
   protected File getInstanceFile(final String path) {
@@ -176,12 +184,13 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     throw new RuntimeException("Failed to start server in " + STARTUP_RETRIES + " attempts");
   }
 
-  private ServerResult start0(final AppServerParameters params) throws Exception {
+  protected ServerResult start0(final AppServerParameters params) throws Exception {
     instanceDir = createInstance(params);
 
     instanceDir.delete(); // createDomain will fail if directory already exists
-    if (instanceDir.exists()) { throw new RuntimeException("Instance dir must not exist: "
-                                                           + instanceDir.getAbsolutePath()); }
+    if (instanceDir.exists()) {
+      throw new RuntimeException("Instance dir must not exist: " + instanceDir.getAbsolutePath());
+    }
 
     createDomain(params);
 
@@ -218,12 +227,16 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       }
 
       if (!runner.isAlive()) {
-        if (amxDebugCheck(nodeLogFile)) { throw new RetryException("NPE in AMXDebug"); }
+        if (amxDebugCheck(nodeLogFile)) {
+          throw new RetryException("NPE in AMXDebug");
+        }
         throw new RuntimeException("Runner thread finished before timeout");
       }
     }
 
-    if (!started) { throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms"); }
+    if (!started) {
+      throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms");
+    }
 
     System.err.println("Started " + params.instanceName() + " on port " + httpPort);
 
@@ -236,7 +249,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     return new AppServerResult(httpPort, this);
   }
 
-  private static boolean amxDebugCheck(final File nodeLogFile) throws IOException {
+  protected static boolean amxDebugCheck(final File nodeLogFile) throws IOException {
     // see DEV-1722
     List<CharSequence> hits = Grep.grep("^Caused by: java.lang.NullPointerException$", nodeLogFile);
     List<CharSequence> hits2 = Grep.grep("^\tat com.sun.appserv.management.base.AMXDebug.getDebug", nodeLogFile);
@@ -244,7 +257,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     return (!hits.isEmpty() && !hits2.isEmpty());
   }
 
-  private void waitForPing() {
+  protected void waitForPing() {
     String pingUrl = "http://localhost:" + httpPort + "/ping/index.html";
     WebConversation wc = new WebConversation();
     wc.setExceptionsThrownOnErrorStatus(false);
@@ -254,7 +267,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       try {
         System.err.println("Pinging " + pingUrl + " - try #" + i);
         response = wc.getResponse(pingUrl);
-        if (response.getResponseCode() == 200) break;
+        if (response.getResponseCode() == 200)
+          break;
       } catch (Exception e) {
         // ignored
       }
@@ -262,11 +276,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     }
   }
 
-  private void waitForAppInstanceRunning(final AppServerParameters params) throws Exception {
+  protected void waitForAppInstanceRunning(final AppServerParameters params) throws Exception {
     while (true) {
       String status = getAppInstanceStatus(params);
       System.err.println(params.instanceName() + " is " + status);
-      if ("running".equals(status)) {
+      if ("running".equals(status) || status.contains("Running")) {
         break;
       }
       System.err.println("Sleeping for 2 sec before checking again...");
@@ -284,8 +298,9 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     Result result = Exec.execute((String[]) cmd.toArray(new String[] {}), null, null, asAdminScript.getParentFile());
 
     /**
-     * Output should be something like this: <instance_name> <status> where <instance_name> is the name of the instance
-     * <status> is one of {not running, running, starting}
+     * Output should be something like this: <instance_name> <status> where
+     * <instance_name> is the name of the instance <status> is one of {not
+     * running, running, starting}
      */
     // System.err.println("list-domains output: \n" + result.getStdout());
     if (result.getStderr().trim().length() > 0) {
@@ -293,18 +308,24 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     }
     System.err.flush();
 
-    if (result.getExitCode() != 0) { throw new RuntimeException(result.toString()); }
+    if (result.getExitCode() != 0) {
+      throw new RuntimeException(result.toString());
+    }
 
     return getStatus(params.instanceName(), result.getStdout());
   }
 
   private String getStatus(final String instanceName, final String output) {
     int start = output.indexOf(instanceName);
-    if (start < 0) { return ""; }
+    if (start < 0) {
+      return "";
+    }
     String line = output.substring(start);
 
     int end = line.indexOf("\n");
-    if (end < 0) { throw new RuntimeException("no end: " + line); }
+    if (end < 0) {
+      throw new RuntimeException("no end: " + line);
+    }
     line = line.substring(0, end).trim();
 
     final int delim = line.indexOf(" ");
@@ -333,7 +354,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     }
   }
 
-  private void deployWars(final Process process, final File nodeLogFile, final Map wars) throws Exception {
+  protected void deployWars(final Process process, final File nodeLogFile, final Map wars) throws Exception {
     for (Iterator iter = wars.entrySet().iterator(); iter.hasNext();) {
       Map.Entry entry = (Entry) iter.next();
       String warName = (String) entry.getKey();
@@ -352,7 +373,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     return builder.makeDeployment().getFileSystemPath().getFile();
   }
 
-  private void deployWar(final String warName, final File warFile, final Process process, final File nodeLogFile) throws IOException, Exception {
+  private void deployWar(final String warName, final File warFile, final Process process, final File nodeLogFile) throws IOException,
+      Exception {
     System.err.println("Deploying war [" + warName + "] on " + instanceDir.getName());
 
     List cmd = new ArrayList();
@@ -377,14 +399,14 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     // deploy failed. Stop the process and see if it the known "web1" problem
     process.destroy();
     ThreadUtil.reallySleep(3000);
-    List<CharSequence> hits = Grep
-        .grep("^SEVERE: WEB0610: WebModule \\[/web1\\] failed to deploy and has been disabled$", nodeLogFile);
-    if (!hits.isEmpty()) { throw new RetryException(result.toString()); }
+    List<CharSequence> hits = Grep.grep("^SEVERE: WEB0610: WebModule \\[/web1\\] failed to deploy and has been disabled$", nodeLogFile);
+    if (!hits.isEmpty()) {
+      throw new RetryException(result.toString());
+    }
 
     // Generic deploy failure
     throw new RuntimeException("Deploy failed for " + warName + ": " + result);
   }
-
 
   abstract protected File getStartScript(AppServerParameters params);
 
@@ -392,13 +414,15 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
   abstract protected String[] getDisplayCommand(String script, AppServerParameters params);
 
-  private String[] getStartupCommand(final AppServerParameters params) throws Exception {
+  protected String[] getStartupCommand(final AppServerParameters params) throws Exception {
     File startScript = getStartScript(params);
 
     String[] displayCommand = getDisplayCommand(startScript.getAbsolutePath(), params);
     if (Os.isUnix()) {
-      // This is an attempt to workaround "cannot execute" IOExceptions we see on the monkey
-      // The problem does NOT appear to be a lack of having execute permission on the script
+      // This is an attempt to workaround "cannot execute" IOExceptions we see
+      // on the monkey
+      // The problem does NOT appear to be a lack of having execute permission
+      // on the script
       String[] tmp = new String[displayCommand.length + 1];
       tmp[0] = "/bin/sh";
       System.arraycopy(displayCommand, 0, tmp, 1, displayCommand.length);
@@ -407,15 +431,17 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     Result result = Exec.execute(displayCommand, null, null, startScript.getParentFile());
 
-    if (result.getExitCode() != 0) { throw new RuntimeException("error executing startserv script: " + result); }
+    if (result.getExitCode() != 0) {
+      throw new RuntimeException("error executing startserv script: " + result);
+    }
 
     String output = result.getStdout().trim();
 
     System.err.println(output);
 
-    if (!output.startsWith("STARTOFCOMMAND|") || !output.endsWith("|ENDOFCOMMAND|")) { throw new RuntimeException(
-                                                                                                                  "cannot parse output: "
-                                                                                                                      + output); }
+    if (!output.startsWith("STARTOFCOMMAND|") || !output.endsWith("|ENDOFCOMMAND|")) {
+      throw new RuntimeException("cannot parse output: " + output);
+    }
 
     output = output.substring("STARTOFCOMMAND|".length());
     output = output.substring(0, output.length() - "|ENDOFCOMMAND|".length());
@@ -429,7 +455,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       String s = (String) cmd.get(i);
 
       if (s.toLowerCase().trim().equals("-classpath") || s.toLowerCase().trim().equals("-cp")) {
-        // the classpath is set with java.class.path system property, check these just for good measure
+        // the classpath is set with java.class.path system property, check
+        // these just for good measure
         throw new RuntimeException("unexpected classpath arguments in startup command " + cmd);
       }
 
@@ -442,9 +469,12 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     String mainArg = (String) cmd.remove(cmd.size() - 1);
     String mainClass = (String) cmd.remove(cmd.size() - 1);
 
-    if (!"com.sun.enterprise.server.PELaunch".equals(mainClass)) { throw new RuntimeException("Unexpected main class: "
-                                                                                              + mainClass); }
-    if (!"start".equals(mainArg)) { throw new RuntimeException("unexpected main argument: " + mainArg); }
+    if (!"com.sun.enterprise.server.PELaunch".equals(mainClass)) {
+      throw new RuntimeException("Unexpected main class: " + mainClass);
+    }
+    if (!"start".equals(mainArg)) {
+      throw new RuntimeException("unexpected main argument: " + mainArg);
+    }
 
     cmd.add(CargoLinkedChildProcess.class.getName());
     cmd.add(mainClass);
@@ -453,6 +483,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     cmd.add(mainArg);
 
     cmd.add(0, JAVA_CMD);
+
+    System.err.println("XXX startup command: " + cmd);
     return (String[]) cmd.toArray(new String[] {});
   }
 
@@ -460,14 +492,15 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     //
   }
 
-  private void modifyDomainConfig(final AppServerParameters params) throws Exception {
+  protected void modifyDomainConfig(final AppServerParameters params) throws Exception {
     File domainXML = getInstanceFile("config/domain.xml");
 
     System.err.println("Modifying domain configuration at " + domainXML.getAbsolutePath());
 
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-    // disable the resolve of the external DTD -- The monkey failed once since it timed out talking to sun's web site
+    // disable the resolve of the external DTD -- The monkey failed once since
+    // it timed out talking to sun's web site
     factory.setAttribute("http://apache.org/xml/features/nonvalidating/load-external-dtd", Boolean.FALSE);
 
     DocumentBuilder builder = factory.newDocumentBuilder();
@@ -475,7 +508,9 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     NodeList list = document.getElementsByTagName("java-config");
 
-    if (list.getLength() != 1) { throw new RuntimeException("wrong number of elements " + list.getLength()); }
+    if (list.getLength() != 1) {
+      throw new RuntimeException("wrong number of elements " + list.getLength());
+    }
 
     Node javaConfig = list.item(0);
 
@@ -483,8 +518,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     if (false) {
       NamedNodeMap attrs = javaConfig.getAttributes();
       attrs.getNamedItem("debug-enabled").setNodeValue("true");
-      attrs.getNamedItem("debug-options")
-          .setNodeValue("-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000");
+      attrs.getNamedItem("debug-options").setNodeValue("-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000");
     }
 
     appendDSOParams(document, javaConfig, params);
@@ -538,12 +572,6 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       }
     }
 
-  }
-
-  private static class RetryException extends Exception {
-    RetryException(final String msg) {
-      super(msg);
-    }
   }
 
   private static class ParamsWithRetry implements AppServerParameters {
