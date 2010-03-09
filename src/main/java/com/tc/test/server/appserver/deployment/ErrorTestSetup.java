@@ -14,6 +14,8 @@ public class ErrorTestSetup extends TestSetup {
   }
 
   public void setUp() {
-    throw new RuntimeException("Container test needs to have TestSetup for proper cleanup!");
+    if (!getTest().getClass().getName().contains("Abstract")) {
+      throw new RuntimeException("Container test needs to have TestSetup for proper cleanup!");
+    }
   }
 }
