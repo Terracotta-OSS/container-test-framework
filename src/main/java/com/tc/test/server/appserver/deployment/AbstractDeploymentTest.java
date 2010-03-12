@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import com.tc.test.AppServerInfo;
 import com.tc.test.TCTestCase;
 import com.tc.test.TestConfigObject;
+import com.tc.test.server.appserver.load.LowMemWorkaround;
 import com.tc.util.TcConfigBuilder;
 
 import java.util.ArrayList;
@@ -42,6 +43,8 @@ public abstract class AbstractDeploymentTest extends TCTestCase {
   }
 
   public boolean shouldDisable() {
+    if (LowMemWorkaround.lessThan2Gb()) { return true; }
+
     return isAllDisabled() || shouldDisableForJavaVersion() || shouldDisableForVariants();
   }
 
