@@ -53,7 +53,7 @@ import junit.framework.Assert;
 public class GenericServer extends AbstractStoppable implements WebApplicationServer {
   private static final Log                  LOG             = LogFactory.getLog(GenericServer.class);
   private static final String               SERVER          = "server_";
-  private static final boolean              GC_LOGGING      = true;
+  private static final boolean              GC_LOGGING      = false;
   private static final boolean              ENABLE_DEBUGGER = Boolean.getBoolean(GenericServer.class.getName()
                                                                                  + ".ENABLE_DEBUGGER");
   private static final ThreadLocal          dsoEnabled      = new ThreadLocal() {
@@ -144,6 +144,11 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
         parameters.appendJvmArgs("-Xms128m -Xmx192m");
         // parameters.appendJvmArgs("-XX:+PrintGCDetails");
         break;
+      case AppServerInfo.WEBSPHERE:
+        parameters.appendSysProp("javax.management.builder.initial", "");
+        parameters.appendJvmArgs("-XX:MaxPermSize=128m");
+        parameters.appendJvmArgs("-Xms128m -Xmx192m");
+        break;        
     }
 
     if (Os.isUnix() && new File("/dev/urandom").exists()) {
@@ -187,8 +192,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
     if (ENABLE_DEBUGGER) {
       int debugPort = 8000 + serverId;
-      parameters.appendJvmArgs("-Xdebug");
-      parameters.appendJvmArgs("-Xrunjdwp:server=y,transport=dt_socket,address=" + debugPort + ",suspend=y");
+      parameters.appendJvmArgs("-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort + " -Djava.compiler=NONE");
       parameters.appendSysProp("aspectwerkz.transform.verbose", true);
       parameters.appendSysProp("aspectwerkz.transform.details", true);
       Banner.warnBanner("Waiting for debugger to connect on port " + debugPort);
