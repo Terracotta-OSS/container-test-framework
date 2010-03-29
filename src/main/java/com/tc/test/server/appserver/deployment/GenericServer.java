@@ -74,7 +74,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private ProxyBuilder                      proxyBuilder    = null;
   private final File                        workingDir;
   private final String                      serverInstanceName;
-  private final File                        tcConfigFile;
+  private final File                        tcConfigFile; 
+  private final int                         appId;
 
   public GenericServer(final TestConfigObject config, final AppServerFactory factory, final AppServerInstallation installation,
                        final File tcConfigFile, final int serverId, final File tempDir) throws Exception {
@@ -103,7 +104,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       parameters.appendJvmArgs("-XX:+HeapDumpOnOutOfMemoryError");
     }
 
-    int appId = config.appServerId();
+    appId = config.appServerId();
     // glassfish fails with these options on
     if (appId != AppServerInfo.GLASSFISH) {
       parameters.appendSysProp("com.sun.management.jmxremote");
@@ -176,7 +177,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   }
 
   private void enableDebug(final int serverId) {
-    if (GC_LOGGING && !Vm.isIBM()) {
+    if (GC_LOGGING && !Vm.isIBM() && appId != AppServerInfo.WEBSPHERE) {
       parameters.appendJvmArgs("-verbose:gc");
       parameters.appendJvmArgs("-XX:+PrintGCDetails");
       parameters.appendJvmArgs("-XX:+PrintGCTimeStamps");
