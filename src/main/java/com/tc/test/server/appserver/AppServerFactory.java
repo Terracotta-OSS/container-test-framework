@@ -18,6 +18,7 @@ import com.tc.test.server.appserver.jetty6x.Jetty6xAppServerFactory;
 import com.tc.test.server.appserver.resin31x.Resin31xAppServerFactory;
 import com.tc.test.server.appserver.tomcat5x.Tomcat5xAppServerFactory;
 import com.tc.test.server.appserver.tomcat6x.Tomcat6xAppServerFactory;
+import com.tc.test.server.appserver.was6x.Was6xAppServerFactory;
 import com.tc.test.server.appserver.wasce1x.Wasce1xAppServerFactory;
 import com.tc.test.server.appserver.weblogic10x.Weblogic10xAppServerFactory;
 import com.tc.test.server.appserver.weblogic8x.Weblogic8xAppServerFactory;
@@ -91,6 +92,9 @@ public abstract class AppServerFactory {
       case AppServerInfo.RESIN:
         if ("3".equals(majorVersion)) return new Resin31xAppServerFactory(new ProtectedKey());
         break;
+      case AppServerInfo.WEBSPHERE:
+        if ("6".equals(majorVersion)) return new Was6xAppServerFactory(new ProtectedKey());
+        break;        
     }
 
     throw new ImplementMe("App server named '" + factoryName + "' with major version " + majorVersion
