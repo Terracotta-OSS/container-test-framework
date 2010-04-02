@@ -334,6 +334,8 @@ public class Was6xAppServer extends AbstractAppServer {
     }
     if (result.getExitCode() != 0) {
       logger.warn("Command did not return 0; message is: " + errorMessage);
+      logger.warn("STDOUT for[" + Arrays.asList(cmd) + "]:\n" + stdout);
+      logger.warn("STDERR for[" + Arrays.asList(cmd) + "]:\n" + stderr);
     }
     return stdout.append(IOUtils.LINE_SEPARATOR).append(stderr).toString();
   }
