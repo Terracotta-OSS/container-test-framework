@@ -219,6 +219,18 @@ public class ServerManager {
     return appServer;
   }
 
+  public WebApplicationServer makeWebApplicationServerNoDso() throws Exception {
+    GenericServer.setDsoEnabled(false);
+    int i = ServerManager.appServerIndex++;
+    WebApplicationServer appServer = new GenericServer(config, factory, installation, null, i, tempDir);
+    if (config.isExpressMode()) {
+      addExpressModeParams(appServer.getServerParameters());
+    }
+    addServerToStop(appServer);
+    return appServer;
+
+  }
+
   public FileSystemPath getTcConfigFile(final String tcConfigPath) {
     URL url = getClass().getResource(tcConfigPath);
     Assert.assertNotNull("could not find: " + tcConfigPath, url);
