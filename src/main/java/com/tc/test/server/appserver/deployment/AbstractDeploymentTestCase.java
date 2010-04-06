@@ -26,16 +26,13 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public abstract class AbstractDeploymentTestCase extends TCTestCase {
+  protected Log               logger                  = LogFactory.getLog(getClass());
 
-  public static final String EXPRESS_MODE_PROPERTY = "com.tc.test.appserver-test-mode";
-  public static final String EXPRESS_MODE          = "express";
-  protected Log              logger                = LogFactory.getLog(getClass());
+  private ServerManager       serverManager;
 
-  private ServerManager      serverManager;
-
-  private final Map          disabledVariants      = new HashMap();
-  private final List         disabledJavaVersion   = new ArrayList();
-  private final boolean      isExpressMode;
+  private final Map           disabledVariants        = new HashMap();
+  private final List          disabledJavaVersion     = new ArrayList();
+  private final boolean       isExpressMode;
 
   public static Test suite() {
     return new ErrorTestSetup(new TestSuite(AbstractDeploymentTestCase.class));
@@ -81,7 +78,7 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   protected ServerManager getServerManager() {
     if (serverManager == null) {
       try {
-        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), getExtraJvmArgsForL2());
+        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), isSessionLockingTrue(), isSynchronousWrite(), getExtraJvmArgsForL2());
       } catch (Exception e) {
         throw new RuntimeException("Unable to create server manager; " + e.toString(), e);
       }
@@ -97,15 +94,9 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
     super.tearDown();
   }
 
-  /**
-   * tcConfig: resource path to tc-config.xml
-   */
-  protected WebApplicationServer makeWebApplicationServer(String tcConfig) throws Exception {
-    return getServerManager().makeWebApplicationServer(tcConfig);
-  }
-
   protected WebApplicationServer makeWebApplicationServer(TcConfigBuilder configBuilder) throws Exception {
-    return getServerManager().makeWebApplicationServer(configBuilder);
+    WebApplicationServer server = getServerManager().makeWebApplicationServer(configBuilder);
+    return server;
   }
 
   protected void restartDSO() throws Exception {
@@ -113,13 +104,9 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   protected DeploymentBuilder makeDeploymentBuilder(String warFileName) {
-    return getServerManager().makeDeploymentBuilder(warFileName);
+    DeploymentBuilder builder = getServerManager().makeDeploymentBuilder(warFileName);
+    return builder;
   }
-
-  // XXX: This causes the bad war file name which breaks WLS tests
-  // protected DeploymentBuilder makeDeploymentBuilder() throws IOException {
-  // return serverManager.makeDeploymentBuilder();
-  // }
 
   protected void waitForSuccess(int timeoutInSeconds, TestCallback callback) throws Throwable {
     long startingTime = System.currentTimeMillis();
@@ -205,8 +192,13 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   public boolean isExpressMode() {
     return isExpressMode;
   }
-  
+
   public boolean canRunExpressMode() {
     return true;
   }
+  
+  public boolean isSynchronousWrite() {
+    return false;
+  }
+
 }

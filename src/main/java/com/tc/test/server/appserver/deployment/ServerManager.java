@@ -4,22 +4,8 @@
  */
 package com.tc.test.server.appserver.deployment;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import junit.framework.Assert;
-
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.terracotta.modules.tool.config.Config;
 import org.terracotta.modules.tool.exception.ModuleNotFoundException;
 import org.terracotta.modules.tool.exception.RemoteIndexIOException;
@@ -31,8 +17,11 @@ import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
 import com.tc.test.server.appserver.AppServerFactory;
 import com.tc.test.server.appserver.AppServerInstallation;
+import com.tc.test.server.appserver.StandardAppServerParameters;
+import com.tc.test.server.appserver.ValveDefinition;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.test.server.util.TimUtil;
+import com.tc.test.server.util.Util;
 import com.tc.text.Banner;
 import com.tc.util.PortChooser;
 import com.tc.util.ProductInfo;
@@ -40,8 +29,27 @@ import com.tc.util.TcConfigBuilder;
 import com.tc.util.runtime.Os;
 import com.tc.util.runtime.Vm;
 
-public class ServerManager {
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Map.Entry;
 
+import junit.framework.Assert;
+
+public class ServerManager {
+  private static final String EXPRESS_MODE_LOAD_CLASS      = "org.terracotta.session.TerracottaWeblogic10xSessionFilter";
   private static final String SESSION_TIM_TESTS_PROPERTIES = "/com/tctest/session-tim/tests.properties";
 
   private static class TimGetUrls {
@@ -90,8 +98,14 @@ public class ServerManager {
   private final Map<String, String>   resolved       = Collections.synchronizedMap(new HashMap<String, String>());
 
   private static int                  serverCounter  = 0;
+  private final boolean               isSynchronousWrite;
+  private final boolean               isSessionLocking;
 
-  public ServerManager(final Class testClass, final Collection extraJvmArgs) throws Exception {
+  public ServerManager(final Class testClass, final Collection extraJvmArgs, boolean isSessionLocking,
+                       boolean isSynchronousWrite) throws Exception {
+    this.isSessionLocking = isSessionLocking;
+    this.isSynchronousWrite = isSynchronousWrite;
+
     config = TestConfigObject.getInstance();
     factory = AppServerFactory.createFactoryFromProperties();
     installDir = config.appserverServerInstallDir();
@@ -102,7 +116,7 @@ public class ServerManager {
     warDir = new File(sandbox, "war");
     jvmArgs = extraJvmArgs;
     installation = AppServerUtil.createAppServerInstallation(factory, installDir, sandbox);
-    
+
     useTimGet = config.isExpressMode() ? false : determineSessionMethod();
 
     if (DEBUG_MODE) {
@@ -192,30 +206,17 @@ public class ServerManager {
     startDSO(withPersistentStore);
   }
 
-  /**
-   * tcConfigResourcePath: resource path
-   */
-  public WebApplicationServer makeWebApplicationServer(final String tcConfigResourcePath) throws Exception {
-    return makeWebApplicationServer(new TcConfigBuilder(tcConfigResourcePath));
-  }
-
   public WebApplicationServer makeWebApplicationServer(final TcConfigBuilder tcConfigBuilder) throws Exception {
     int i = ServerManager.appServerIndex++;
 
     WebApplicationServer appServer = new GenericServer(config, factory, installation,
                                                        prepareClientTcConfig(tcConfigBuilder).getTcConfigFile(), i,
                                                        tempDir);
+    if (config.isExpressMode()) {
+      addExpressModeParams(appServer.getServerParameters());
+    }
     addServerToStop(appServer);
     return appServer;
-  }
-
-  public WebApplicationServer makeWebApplicationServerNoDso() throws Exception {
-    GenericServer.setDsoEnabled(false);
-    int i = ServerManager.appServerIndex++;
-    WebApplicationServer appServer = new GenericServer(config, factory, installation, null, i, tempDir);
-    addServerToStop(appServer);
-    return appServer;
-
   }
 
   public FileSystemPath getTcConfigFile(final String tcConfigPath) {
@@ -231,11 +232,11 @@ public class ServerManager {
     aCopy.setTcConfigFile(tcConfigFile);
     aCopy.setDsoPort(getServerTcConfig().getDsoPort());
     aCopy.setJmxPort(getServerTcConfig().getJmxPort());
-    
+
     if (!config.isExpressMode()) {
       prepareCustomMode(aCopy);
     }
-    
+
     aCopy.saveToFile();
     return aCopy;
   }
@@ -378,11 +379,11 @@ public class ServerManager {
   }
 
   public DeploymentBuilder makeDeploymentBuilder(final String warFileName) {
-    return new WARBuilder(warFileName, warDir, config);
-  }
-
-  public DeploymentBuilder makeDeploymentBuilder() throws IOException {
-    return new WARBuilder(warDir, config);
+    DeploymentBuilder builder = new WARBuilder(warFileName, warDir, config);
+    if (config.isExpressMode()) {
+      addExpressModeWarConfig(builder);
+    }
+    return builder;
   }
 
   public void stopAllWebServers() {
@@ -468,16 +469,16 @@ public class ServerManager {
 
     for (TimGetUrls urls : TIM_GET_URLS) {
       try {
-    	Properties timgetProps = new Properties();
-    	
-    	timgetProps.setProperty(Config.KEYSPACE + Config.TC_VERSION, ProductInfo.getInstance().mavenArtifactsVersion());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.API_VERSION, ProductInfo.getInstance().apiVersion());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.INCLUDE_SNAPSHOTS, "true");
-    	timgetProps.setProperty(Config.KEYSPACE + Config.MODULES_DIR, getTimGetModulesDir());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.CACHE, this.sandbox.getAbsolutePath());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.DATA_FILE_URL, urls.getUrl());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.RELATIVE_URL_BASE, urls.getRelativeUrlBase());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.DATA_CACHE_EXPIRATION, "0");
+        Properties timgetProps = new Properties();
+
+        timgetProps.setProperty(Config.KEYSPACE + Config.TC_VERSION, ProductInfo.getInstance().mavenArtifactsVersion());
+        timgetProps.setProperty(Config.KEYSPACE + Config.API_VERSION, ProductInfo.getInstance().apiVersion());
+        timgetProps.setProperty(Config.KEYSPACE + Config.INCLUDE_SNAPSHOTS, "true");
+        timgetProps.setProperty(Config.KEYSPACE + Config.MODULES_DIR, getTimGetModulesDir());
+        timgetProps.setProperty(Config.KEYSPACE + Config.CACHE, this.sandbox.getAbsolutePath());
+        timgetProps.setProperty(Config.KEYSPACE + Config.DATA_FILE_URL, urls.getUrl());
+        timgetProps.setProperty(Config.KEYSPACE + Config.RELATIVE_URL_BASE, urls.getRelativeUrlBase());
+        timgetProps.setProperty(Config.KEYSPACE + Config.DATA_CACHE_EXPIRATION, "0");
 
         new TIMGetTool("install " + name + " -u", timgetProps);
 
@@ -493,7 +494,8 @@ public class ServerManager {
         Banner.infoBanner("Repository location not available [" + urls.getUrl()
                           + "] for tim-get, moving on to the next one");
       } catch (ModuleNotFoundException e) {
-    	Banner.infoBanner("Module " + name + " couldn't be found on this repo " + urls.getUrl() + ", trying the next one");
+        Banner.infoBanner("Module " + name + " couldn't be found on this repo " + urls.getUrl()
+                          + ", trying the next one");
       } catch (Exception e) {
         Banner.errorBanner("Unexpected error using url [" + urls.getUrl() + "] for tim-get, trying the next one");
         e.printStackTrace();
@@ -502,5 +504,123 @@ public class ServerManager {
 
     throw new RuntimeException("Unable to resolve TIM with name " + name
                                + " from any repository using artifactVersion " + mavenArtifactsVersion);
+  }
+
+  private ValveDefinition makeValveDef() {
+    ValveDefinition valve = new ValveDefinition(Mappings.getClassForAppServer(config.appServerInfo()));
+    for (Entry<String, String> attr : getConfigAttributes().entrySet()) {
+      valve.setAttribute(attr.getKey(), attr.getValue());
+    }
+    return valve;
+  }
+
+  private String getTcConfigUrl() {
+    return "localhost:" + serverTcConfig.getDsoPort();
+  }
+
+  private boolean useFilter() {
+    int appId = config.appServerId();
+    return appId == AppServerInfo.WEBLOGIC || appId == AppServerInfo.JETTY || appId == AppServerInfo.WEBSPHERE;
+  }
+
+  private Map<String, String> getConfigAttributes() {
+    Map<String, String> attrs = new HashMap();
+    attrs.put("tcConfigUrl", getTcConfigUrl());
+    attrs.put("sessionLocking", Boolean.toString(isSessionLocking));
+    attrs.put("synchronousWrite", Boolean.toString(isSynchronousWrite));
+    return attrs;
+  }
+
+  private void addExpressModeParams(StandardAppServerParameters params) {
+    File expressJar;
+    try {
+      expressJar = new File(Util.jarFor(Class.forName(EXPRESS_MODE_LOAD_CLASS)));
+    } catch (ClassNotFoundException e1) {
+      throw new RuntimeException(e1);
+    }
+    File sandBoxArtifact = new File(this.tempDir, expressJar.getName());
+
+    if (!sandBoxArtifact.exists()) {
+      // copy the express jar into the test temp dir since that likely won't have any spaces in it
+      try {
+        FileUtils.copyFile(expressJar, sandBoxArtifact);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    params.addTomcatServerJar(sandBoxArtifact.getAbsolutePath());
+
+    if (config.appServerId() == AppServerInfo.TOMCAT) {
+      params.addValve(makeValveDef());
+    }
+  }
+
+  private void addExpressModeWarConfig(DeploymentBuilder builder) {
+    if (useFilter()) {
+      try {
+        builder.addDirectoryOrJARContainingClass(Class.forName(EXPRESS_MODE_LOAD_CLASS));
+      } catch (ClassNotFoundException e1) {
+        throw new RuntimeException(e1);
+      }
+
+      Map<String, String> filterConfig = getConfigAttributes();
+
+      Class filter;
+      try {
+        filter = Class.forName(Mappings.getClassForAppServer(config.appServerInfo()));
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException(e);
+      }
+      builder.addFilter("terracotta-filter", "/*", filter, filterConfig, EnumSet.allOf(WARBuilder.Dispatcher.class));
+    }
+
+    builder.addFileAsResource(makeJbossContextXml(config.appServerInfo()), "WEB-INF");
+  }
+
+  private File makeJbossContextXml(AppServerInfo appServerInfo) {
+    File tmp = new File(this.sandbox, "context.xml");
+    String xml = "";
+    xml += "<Context>\n";
+    xml += "  " + makeValveDef().toString() + "\n";
+    xml += "</Context>\n";
+
+    FileOutputStream out = null;
+    try {
+      out = new FileOutputStream(tmp);
+      out.write(xml.getBytes());
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    } finally {
+      IOUtils.closeQuietly(out);
+    }
+
+    return tmp;
+  }
+
+  private static class Mappings {
+    private static final Map<String, String> mappings = new HashMap<String, String>();
+
+    static {
+      mappings.put("jboss-4.0.", "TerracottaJboss40xSessionValve");
+      mappings.put("jboss-4.2.", "TerracottaJboss42xSessionValve");
+      mappings.put("jboss-5.1.", "TerracottaJboss51xSessionValve");
+      mappings.put("weblogic-9.", "TerracottaWeblogic9xSessionFilter");
+      mappings.put("weblogic-10.", "TerracottaWeblogic10xSessionFilter");
+      mappings.put("jetty-6.1.", "TerracottaJetty61xSessionFilter");
+      mappings.put("tomcat-5.0.", "TerracottaTomcat50xSessionValve");
+      mappings.put("tomcat-5.5.", "TerracottaTomcat55xSessionValve");
+      mappings.put("tomcat-6.0.", "TerracottaTomcat60xSessionValve");
+      mappings.put("websphere-6.1.", "TerracottaWebsphere61xSessionFilter");
+    }
+
+    static String getClassForAppServer(AppServerInfo info) {
+      for (String key : mappings.keySet()) {
+        if (info.toString().startsWith(key)) { return "org.terracotta.session." + mappings.get(key); }
+
+      }
+
+      throw new AssertionError("no mapping for " + info);
+    }
   }
 }

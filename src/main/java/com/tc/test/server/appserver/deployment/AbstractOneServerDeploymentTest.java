@@ -96,7 +96,6 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
       WebApplicationServer server = getServerManager().makeWebApplicationServer(tcConfigBuilder);
       server.addWarDeployment(deployment, context);
       configureServerParamers(server.getServerParameters());
-      addExpressModeParamsIfNeeded(server.getServerParameters());
       if (start) {
         server.start();
       }
@@ -107,7 +106,6 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
       DeploymentBuilder builder = makeDeploymentBuilder(this.context + ".war");
       builder.addDirectoryOrJARContainingClass(testClass);
       configureWar(builder);
-      configureExpressModeIfNeeded(builder);
       return builder.makeDeployment();
     }
 
