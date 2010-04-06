@@ -27,25 +27,29 @@ import junit.framework.TestSuite;
 
 public abstract class AbstractDeploymentTestCase extends TCTestCase {
 
-  protected Log         logger              = LogFactory.getLog(getClass());
+  public static final String EXPRESS_MODE_PROPERTY = "com.tc.test.appserver-test-mode";
+  public static final String EXPRESS_MODE          = "express";
+  protected Log              logger                = LogFactory.getLog(getClass());
 
-  private ServerManager serverManager;
+  private ServerManager      serverManager;
 
-  private final Map     disabledVariants    = new HashMap();
-  private final List    disabledJavaVersion = new ArrayList();
+  private final Map          disabledVariants      = new HashMap();
+  private final List         disabledJavaVersion   = new ArrayList();
+  private final boolean      isExpressMode;
 
   public static Test suite() {
     return new ErrorTestSetup(new TestSuite(AbstractDeploymentTestCase.class));
   }
 
   public AbstractDeploymentTestCase() {
-    //
+    isExpressMode = TestConfigObject.getInstance().isExpressMode();
   }
 
   public boolean shouldDisable() {
     if (LowMemWorkaround.lessThan2Gb()) { return true; }
 
-    return isAllDisabled() || shouldDisableForJavaVersion() || shouldDisableForVariants();
+    return isAllDisabled() || shouldDisableForJavaVersion() || shouldDisableForVariants()
+           || (isExpressMode() && !canRunExpressMode());
   }
 
   @Override
@@ -198,4 +202,11 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
     return true;
   }
 
+  public boolean isExpressMode() {
+    return isExpressMode;
+  }
+  
+  public boolean canRunExpressMode() {
+    return true;
+  }
 }

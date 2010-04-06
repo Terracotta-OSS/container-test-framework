@@ -102,8 +102,8 @@ public class ServerManager {
     warDir = new File(sandbox, "war");
     jvmArgs = extraJvmArgs;
     installation = AppServerUtil.createAppServerInstallation(factory, installDir, sandbox);
-
-    useTimGet = determineSessionMethod();
+    
+    useTimGet = config.isExpressMode() ? false : determineSessionMethod();
 
     if (DEBUG_MODE) {
       serverTcConfig.setDsoPort(9510);
@@ -231,7 +231,16 @@ public class ServerManager {
     aCopy.setTcConfigFile(tcConfigFile);
     aCopy.setDsoPort(getServerTcConfig().getDsoPort());
     aCopy.setJmxPort(getServerTcConfig().getJmxPort());
+    
+    if (!config.isExpressMode()) {
+      prepareCustomMode(aCopy);
+    }
+    
+    aCopy.saveToFile();
+    return aCopy;
+  }
 
+  private void prepareCustomMode(TcConfigBuilder aCopy) {
     if (useTimGet) {
       aCopy.addRepository(getTimGetModulesDir());
     } else {
@@ -358,8 +367,6 @@ public class ServerManager {
       default:
         // nothing for now
     }
-    aCopy.saveToFile();
-    return aCopy;
   }
 
   void setServersToStop(final List serversToStop) {

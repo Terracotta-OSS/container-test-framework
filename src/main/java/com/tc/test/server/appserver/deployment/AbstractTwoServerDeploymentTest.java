@@ -103,6 +103,7 @@ public abstract class AbstractTwoServerDeploymentTest extends AbstractDeployment
     private WebApplicationServer createServer(Deployment deployment, String context) throws Exception {
       WebApplicationServer server = getServerManager().makeWebApplicationServer(tcConfigBuilder);
       configureServerParamers(server.getServerParameters());
+      addExpressModeParamsIfNeeded(server.getServerParameters());
       server.addWarDeployment(deployment, context);
       server.start();
 
@@ -114,6 +115,7 @@ public abstract class AbstractTwoServerDeploymentTest extends AbstractDeployment
       DeploymentBuilder builder = makeDeploymentBuilder(context + ".war");
       builder.addDirectoryOrJARContainingClass(testClass);
       configureWar(server, builder);
+      configureExpressModeIfNeeded(builder);
       return builder.makeDeployment();
     }
 
