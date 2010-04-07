@@ -98,11 +98,11 @@ public class ServerManager {
   private final Map<String, String>   resolved       = Collections.synchronizedMap(new HashMap<String, String>());
 
   private static int                  serverCounter  = 0;
-  private final boolean               isSynchronousWrite;
-  private final boolean               isSessionLocking;
+  private final Boolean               isSynchronousWrite;
+  private final Boolean               isSessionLocking;
 
-  public ServerManager(final Class testClass, final Collection extraJvmArgs, boolean isSessionLocking,
-                       boolean isSynchronousWrite) throws Exception {
+  public ServerManager(final Class testClass, final Collection extraJvmArgs, Boolean isSessionLocking,
+                       Boolean isSynchronousWrite) throws Exception {
     this.isSessionLocking = isSessionLocking;
     this.isSynchronousWrite = isSynchronousWrite;
 
@@ -538,8 +538,14 @@ public class ServerManager {
   private Map<String, String> getConfigAttributes() {
     Map<String, String> attrs = new HashMap();
     attrs.put("tcConfigUrl", getTcConfigUrl());
-    attrs.put("sessionLocking", Boolean.toString(isSessionLocking));
-    attrs.put("synchronousWrite", Boolean.toString(isSynchronousWrite));
+    System.out.println("XXX: sessionLocking:" + isSessionLocking);
+    System.out.println("XXX: synchronousWrite: " + isSynchronousWrite);
+    if (isSessionLocking != null) {
+      attrs.put("sessionLocking", isSessionLocking.toString());
+    }
+    if (isSynchronousWrite != null) {
+      attrs.put("synchronousWrite", isSynchronousWrite.toString());
+    }
     return attrs;
   }
 

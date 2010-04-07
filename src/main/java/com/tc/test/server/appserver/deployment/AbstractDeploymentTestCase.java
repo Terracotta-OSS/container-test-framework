@@ -78,7 +78,7 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   protected ServerManager getServerManager() {
     if (serverManager == null) {
       try {
-        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), isSessionLockingTrue(), isSynchronousWrite(), getExtraJvmArgsForL2());
+        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), getSessionLocking(), getSynchronousWrite(), getExtraJvmArgsForL2());
       } catch (Exception e) {
         throw new RuntimeException("Unable to create server manager; " + e.toString(), e);
       }
@@ -185,20 +185,31 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
     return false;
   }
 
-  public boolean isSessionLockingTrue() {
-    return true;
+  /**
+   * Not to be overriden. It's a util function
+   * to query session locking status. To change locking
+   * please override getSessionLocking() instead
+   */
+  public final boolean isSessionLockingTrue() {
+    return Boolean.TRUE.equals(getSessionLocking());
+  }
+  
+  protected Boolean getSessionLocking() {
+    return null;
+  }
+  
+  protected Boolean getSynchronousWrite() {
+    return null;
   }
 
   public boolean isExpressMode() {
     return isExpressMode;
   }
 
-  public boolean canRunExpressMode() {
+  protected boolean canRunExpressMode() {
     return true;
   }
   
-  public boolean isSynchronousWrite() {
-    return false;
-  }
+
 
 }

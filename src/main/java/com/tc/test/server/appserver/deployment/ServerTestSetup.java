@@ -54,7 +54,8 @@ public class ServerTestSetup extends TestSetup {
   protected ServerManager getServerManager() {
     if (sm == null) {
       try {
-        sm = ServerManagerUtil.startAndBind(testClass, isWithPersistentStore(), isSessionLockingTrue(), isSynchronousWrite(), extraJvmArgs);
+        sm = ServerManagerUtil.startAndBind(testClass, isWithPersistentStore(), getSessionLocking(),
+                                            getSynchronousWrite(), extraJvmArgs);
       } catch (Exception e) {
         throw new RuntimeException("Unable to create server manager", e);
       }
@@ -87,11 +88,19 @@ public class ServerTestSetup extends TestSetup {
     return false;
   }
 
-  public boolean isSessionLockingTrue() {
-    return true;
+  /**
+   * Not to be overriden. It's a util function to query session locking status. To change locking please override
+   * getSessionLocking() instead
+   */
+  public final boolean isSessionLockingTrue() {
+    return Boolean.TRUE.equals(getSessionLocking());
   }
-  
-  public boolean isSynchronousWrite() {
-    return false;
+
+  protected Boolean getSessionLocking() {
+    return null;
+  }
+
+  protected Boolean getSynchronousWrite() {
+    return null;
   }
 }

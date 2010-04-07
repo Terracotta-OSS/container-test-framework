@@ -14,7 +14,7 @@ public class ServerManagerUtil {
   protected final static Log logger = LogFactory.getLog(ServerManagerUtil.class);
   private static ServerManager theServerManager;
 
-  private static synchronized ServerManager start(Class testClass, boolean withPersistentStore, boolean isSessionLocking, boolean isSynchronousWrite, Collection extraJvmArgs) throws Exception {
+  private static synchronized ServerManager start(Class testClass, boolean withPersistentStore, Boolean isSessionLocking, Boolean isSynchronousWrite, Collection extraJvmArgs) throws Exception {
     ServerManager existingServerManager = getExistingServerManager();
     if (existingServerManager != null) {
       logger.debug("Using existing ServerManager");
@@ -40,7 +40,7 @@ public class ServerManagerUtil {
     return theServerManager;
   }
 
-  public static synchronized ServerManager startAndBind(Class testClass, boolean withPersistentStore, boolean isSessionLocking, boolean isSynchronousWrite, Collection extraJvmArgs)
+  public static synchronized ServerManager startAndBind(Class testClass, boolean withPersistentStore, Boolean isSessionLocking, Boolean isSynchronousWrite, Collection extraJvmArgs)
       throws Exception {
     ServerManager sm = start(testClass, withPersistentStore, isSessionLocking, isSynchronousWrite, extraJvmArgs);
     theServerManager = sm;
