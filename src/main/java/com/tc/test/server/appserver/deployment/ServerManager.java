@@ -72,9 +72,10 @@ public class ServerManager {
 
   // The internal repository is listed first since it is the preferred repo
   private static final TimGetUrls[]   TIM_GET_URLS   = {
-      new TimGetUrls("http://forge-dev.terracotta.lan/api/2/index.xml.gz", "http://forge-dev.terracotta.lan/repo"),
-      new TimGetUrls("http://kong.terracotta.lan/maven2/tim-get/2/index.xml.gz", "http://kong.terracotta.lan/maven2"),
-      new TimGetUrls("http://www.terracotta.org/download/reflector/maven2/tim-get/2/index.xml.gz",
+      new TimGetUrls("http://kong/repo/staging/tim-get/2/index.xml.gz", "http://kong/repo/staging"), /* staging */
+      new TimGetUrls("http://kong/repo/snapshots/tim-get/2/index.xml.gz", "http://kong/repo/snapshots"), /* snapshots */
+      new TimGetUrls("http://kong/maven2/tim-get/2/index.xml.gz", "http://kong/maven2"), /* release */
+      new TimGetUrls("http://www.terracotta.org/download/reflector/maven2/tim-get/2/index.xml.gz", /* S3 */
                      "http://www.terracotta.org/download/reflector/maven2") };
 
   protected final static TCLogger     logger         = TCLogging.getLogger(ServerManager.class);
