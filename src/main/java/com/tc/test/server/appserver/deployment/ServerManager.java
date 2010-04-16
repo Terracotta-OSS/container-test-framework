@@ -74,9 +74,11 @@ public class ServerManager {
   private static final TimGetUrls[]   TIM_GET_URLS   = {
       new TimGetUrls("http://kong/repo/staging/tim-get/2/index.xml.gz", "http://kong/repo/staging"), /* staging */
       new TimGetUrls("http://kong/repo/snapshots/tim-get/2/index.xml.gz", "http://kong/repo/snapshots"), /* snapshots */
-      new TimGetUrls("http://kong/maven2/tim-get/2/index.xml.gz", "http://kong/maven2"), /* release */
-      new TimGetUrls("http://www.terracotta.org/download/reflector/maven2/tim-get/2/index.xml.gz", /* S3 */
-                     "http://www.terracotta.org/download/reflector/maven2") };
+      new TimGetUrls("http://kong/repo/releases/tim-get/2/index.xml.gz", "http://kong/repo/releases"), /* release */
+      new TimGetUrls("http://www.terracotta.org/download/reflector/snapshots/tim-get/2/index.xml.gz", /* S3 */
+      "http://www.terracotta.org/download/reflector/snapshots"),
+      new TimGetUrls("http://www.terracotta.org/download/reflector/releases/tim-get/2/index.xml.gz", /* S3 */
+      "http://www.terracotta.org/download/reflector/releases") };
 
   protected final static TCLogger     logger         = TCLogging.getLogger(ServerManager.class);
   private static int                  appServerIndex = 0;
