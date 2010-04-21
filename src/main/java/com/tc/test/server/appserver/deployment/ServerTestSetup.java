@@ -130,7 +130,10 @@ public class ServerTestSetup extends TestSetup {
     final Boolean first = queryTestCase(query, testCases[0]);
     for (int i = 1; i < testCases.length; i++) {
       Boolean next = queryTestCase(query, testCases[i]);
-      if ((first == null && next != null) || first != next) { throw new AssertionError("inconsistent results"); }
+      if ((first == null && next != null) || first != next) {
+        //
+        throw new AssertionError("inconsistent results: " + first + " != " + next + " at index " + i);
+      }
     }
 
     return first;
