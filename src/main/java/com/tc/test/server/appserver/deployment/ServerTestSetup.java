@@ -10,8 +10,10 @@ import com.tc.test.server.appserver.load.LowMemWorkaround;
 import com.tc.text.Banner;
 import com.tc.util.TcConfigBuilder;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 
 import junit.extensions.TestSetup;
 import junit.framework.TestSuite;
@@ -95,27 +97,63 @@ public class ServerTestSetup extends TestSetup {
     return false;
   }
 
-  private AbstractDeploymentTestCase getTestCase() {
+  private AbstractDeploymentTestCase[] getTestCases() {
     TestSuite suite = (TestSuite) getTest();
     int count = suite.testCount();
-    if (count != 1) { throw new AssertionError("Expecting 1 test case, there are " + count); }
 
-    return ((AbstractDeploymentTestCase) suite.testAt(0));
+    List<AbstractDeploymentTestCase> rv = new ArrayList<AbstractDeploymentTestCase>();
+    for (int i = 0; i < count; i++) {
+      rv.add((AbstractDeploymentTestCase) suite.testAt(i));
+    }
+
+    return rv.toArray(new AbstractDeploymentTestCase[] {});
   }
 
   // This method not meant to be overridden -- do it in the test case itself (not the test setup)
   public final boolean isSessionLockingTrue() {
-    return getTestCase().isSessionLockingTrue();
+    return queryTestCases(Query.IS_SESSION_LOCKING_TRUE);
   }
 
   // This method not meant to be overridden -- do it in the test case itself (not the test setup)
   private final Boolean getSessionLocking() {
-    return getTestCase().getSessionLocking();
+    return queryTestCases(Query.SESSION_LOCKING);
   }
 
   // This method not meant to be overridden -- do it in the test case itself (not the test setup)
   private final Boolean getSynchronousWrite() {
-    return getTestCase().getSynchronousWrite();
+    return queryTestCases(Query.SYNCHRONOUS_WRITE);
+  }
+
+  private Boolean queryTestCases(Query query) {
+    AbstractDeploymentTestCase[] testCases = getTestCases();
+
+    final Boolean first = queryTestCase(query, testCases[0]);
+    for (int i = 1; i < testCases.length; i++) {
+      Boolean next = queryTestCase(query, testCases[i]);
+      if ((first == null && next != null) || first != next) { throw new AssertionError("inconsistent results"); }
+    }
+
+    return first;
+  }
+
+  private Boolean queryTestCase(Query query, AbstractDeploymentTestCase testCase) {
+    switch (query) {
+      case SYNCHRONOUS_WRITE: {
+        return testCase.getSynchronousWrite();
+      }
+      case SESSION_LOCKING: {
+        return testCase.getSessionLocking();
+      }
+      case IS_SESSION_LOCKING_TRUE: {
+        return testCase.isSessionLockingTrue();
+      }
+    }
+
+    throw new AssertionError("query: " + query);
+  }
+
+  private enum Query {
+    SYNCHRONOUS_WRITE, SESSION_LOCKING, IS_SESSION_LOCKING_TRUE;
   }
 
 }
