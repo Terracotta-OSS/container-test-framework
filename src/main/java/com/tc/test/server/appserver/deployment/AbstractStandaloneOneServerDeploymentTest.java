@@ -8,7 +8,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.tc.test.server.appserver.StandardAppServerParameters;
-import com.tc.util.TcConfigBuilder;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -33,29 +32,14 @@ public abstract class AbstractStandaloneOneServerDeploymentTest extends Abstract
 
   public static abstract class StandaloneOneServerTestSetup extends ServerTestSetup {
     private final Log              logger = LogFactory.getLog(getClass());
-
-    private final Class            testClass;
     private final String           context;
-    @SuppressWarnings("unused")
-    private final TcConfigBuilder  tcConfigBuilder;
 
     private boolean                start  = true;
-
     protected WebApplicationServer server0;
 
     protected StandaloneOneServerTestSetup(Class testClass, String context) {
-      this(testClass, new TcConfigBuilder(), context);
-    }
-
-    protected StandaloneOneServerTestSetup(Class testClass, String tcConfigFile, String context) {
-      this(testClass, new TcConfigBuilder(tcConfigFile), context);
-    }
-
-    protected StandaloneOneServerTestSetup(Class testClass, TcConfigBuilder configBuilder, String context) {
       super(testClass);
-      this.testClass = testClass;
       this.context = context;
-      this.tcConfigBuilder = configBuilder;
     }
 
     protected void setStart(boolean start) {
@@ -106,8 +90,8 @@ public abstract class AbstractStandaloneOneServerDeploymentTest extends Abstract
     }
 
     private Deployment makeWAR() throws Exception {
-      DeploymentBuilder builder = makeDeploymentBuilder(this.context + ".war");
-      builder.addDirectoryOrJARContainingClass(testClass);
+      DeploymentBuilder builder = makeDeploymentBuilder(context + ".war");
+      builder.addDirectoryOrJARContainingClass(getTestClass());
       configureWar(builder);
       return builder.makeDeployment();
     }

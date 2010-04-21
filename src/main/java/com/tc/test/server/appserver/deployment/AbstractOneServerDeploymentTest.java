@@ -26,40 +26,28 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
     this.server0 = server0;
   }
 
+  @Override
   protected boolean shouldKillAppServersEachRun() {
     return false;
   }
 
   public static abstract class OneServerTestSetup extends ServerTestSetup {
-    private Log                    logger = LogFactory.getLog(getClass());
-
-    private final Class            testClass;
+    private final Log              logger = LogFactory.getLog(getClass());
     private final String           context;
-    private final TcConfigBuilder  tcConfigBuilder;
 
     private boolean                start  = true;
-
     protected WebApplicationServer server0;
 
     protected OneServerTestSetup(Class testClass, String context) {
-      this(testClass, new TcConfigBuilder(), context);
-    }
-
-    protected OneServerTestSetup(Class testClass, String tcConfigFile, String context) {
-      this(testClass, new TcConfigBuilder(tcConfigFile), context);
-    }
-
-    protected OneServerTestSetup(Class testClass, TcConfigBuilder configBuilder, String context) {
       super(testClass);
-      this.testClass = testClass;
       this.context = context;
-      this.tcConfigBuilder = configBuilder;
     }
 
     protected void setStart(boolean start) {
       this.start = start;
     }
 
+    @Override
     protected void setUp() throws Exception {
       if (shouldDisable()) return;
       super.setUp();
@@ -71,7 +59,7 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
         long l2 = System.currentTimeMillis();
         logger.info("### WAR build " + (l2 - l1) / 1000f + " at " + deployment.getFileSystemPath());
 
-        configureTcConfig(tcConfigBuilder);
+        configureTcConfig(getTcConfigBuilder());
         server0 = createServer(deployment);
 
         TestSuite suite = (TestSuite) getTest();
@@ -93,7 +81,7 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
     }
 
     private WebApplicationServer createServer(Deployment deployment) throws Exception {
-      WebApplicationServer server = getServerManager().makeWebApplicationServer(tcConfigBuilder);
+      WebApplicationServer server = getServerManager().makeWebApplicationServer(getTcConfigBuilder());
       server.addWarDeployment(deployment, context);
       configureServerParamers(server.getServerParameters());
       if (start) {
@@ -104,7 +92,7 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
 
     private Deployment makeWAR() throws Exception {
       DeploymentBuilder builder = makeDeploymentBuilder(this.context + ".war");
-      builder.addDirectoryOrJARContainingClass(testClass);
+      builder.addDirectoryOrJARContainingClass(getTestClass());
       configureWar(builder);
       return builder.makeDeployment();
     }

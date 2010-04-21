@@ -26,13 +26,13 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public abstract class AbstractDeploymentTestCase extends TCTestCase {
-  protected Log               logger                  = LogFactory.getLog(getClass());
+  protected Log         logger              = LogFactory.getLog(getClass());
 
-  private ServerManager       serverManager;
+  private ServerManager serverManager;
 
-  private final Map           disabledVariants        = new HashMap();
-  private final List          disabledJavaVersion     = new ArrayList();
-  private final boolean       isExpressMode;
+  private final Map     disabledVariants    = new HashMap();
+  private final List    disabledJavaVersion = new ArrayList();
+  private final boolean isExpressMode;
 
   public static Test suite() {
     return new ErrorTestSetup(new TestSuite(AbstractDeploymentTestCase.class));
@@ -78,7 +78,8 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   protected ServerManager getServerManager() {
     if (serverManager == null) {
       try {
-        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), getSessionLocking(), getSynchronousWrite(), getExtraJvmArgsForL2());
+        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), getSessionLocking(),
+                                                       getSynchronousWrite(), getExtraJvmArgsForL2());
       } catch (Exception e) {
         throw new RuntimeException("Unable to create server manager; " + e.toString(), e);
       }
@@ -186,18 +187,22 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   /**
-   * Not to be overriden. It's a util function
-   * to query session locking status. To change locking
-   * please override getSessionLocking() instead
+   * Not to be overridden. This is a utility function to query session locking status. To change locking please override
+   * getSessionLocking() instead
    */
   public final boolean isSessionLockingTrue() {
-    return Boolean.TRUE.equals(getSessionLocking());
+    Boolean sessionLocking = getSessionLocking();
+
+    // the default for session locking is true for custom and false for express
+    if (sessionLocking == null) { return !isExpressMode(); }
+
+    return sessionLocking;
   }
-  
+
   protected Boolean getSessionLocking() {
     return null;
   }
-  
+
   protected Boolean getSynchronousWrite() {
     return null;
   }
@@ -209,7 +214,5 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   protected boolean canRunExpressMode() {
     return true;
   }
-  
-
 
 }

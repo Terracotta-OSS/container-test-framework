@@ -39,20 +39,22 @@ public abstract class AbstractStandaloneTwoServerDeploymentTest extends Abstract
   private static abstract class StandaloneTwoServerTestSetupBase extends ServerTestSetup {
     private final Log              logger = LogFactory.getLog(getClass());
 
-    private final Class            testClass;
     private final String           context0;
     private final String           context1;
-    private final TcConfigBuilder  tcConfigBuilder;
 
     protected WebApplicationServer server0;
     protected WebApplicationServer server1;
 
-    protected StandaloneTwoServerTestSetupBase(Class testClass, TcConfigBuilder configBuilder, String context0, String context1) {
-      super(testClass);
-      this.testClass = testClass;
+    protected StandaloneTwoServerTestSetupBase(Class testClass, String context0, String context1) {
+      this(testClass, null, context0, context1);
+
+    }
+
+    public StandaloneTwoServerTestSetupBase(Class testClass, TcConfigBuilder tcConfigBuilder, String context0,
+                                            String context1) {
+      super(testClass, tcConfigBuilder);
       this.context0 = context0;
       this.context1 = context1;
-      this.tcConfigBuilder = configBuilder;
     }
 
     @Override
@@ -73,7 +75,7 @@ public abstract class AbstractStandaloneTwoServerDeploymentTest extends Abstract
           logger.info("### WAR build 1 " + (l3 - l2) / 1000f + " at " + deployment1.getFileSystemPath());
         }
 
-        configureTcConfig(tcConfigBuilder);
+        configureTcConfig(getTcConfigBuilder());
         server0 = createServer(deployment0, context0);
         if (null != deployment1) {
           server1 = createServer(deployment1, context1);
@@ -112,7 +114,7 @@ public abstract class AbstractStandaloneTwoServerDeploymentTest extends Abstract
     private Deployment makeWAR(int server) throws Exception {
       String context = (server == 0) ? context0 : context1;
       DeploymentBuilder builder = makeDeploymentBuilder(context + ".war");
-      builder.addDirectoryOrJARContainingClass(testClass);
+      builder.addDirectoryOrJARContainingClass(getTestClass());
       configureWar(server, builder);
       return builder.makeDeployment();
     }
@@ -136,15 +138,7 @@ public abstract class AbstractStandaloneTwoServerDeploymentTest extends Abstract
    */
   public static abstract class StandaloneTwoServerTestSetup extends StandaloneTwoServerTestSetupBase {
     protected StandaloneTwoServerTestSetup(Class testClass, String context) {
-      this(testClass, new TcConfigBuilder(), context);
-    }
-
-    protected StandaloneTwoServerTestSetup(Class testClass, String tcConfigFile, String context) {
-      this(testClass, new TcConfigBuilder(tcConfigFile), context);
-    }
-
-    protected StandaloneTwoServerTestSetup(Class testClass, TcConfigBuilder configBuilder, String context) {
-      super(testClass, configBuilder, context, null);
+      super(testClass, context, null);
     }
 
     @Override

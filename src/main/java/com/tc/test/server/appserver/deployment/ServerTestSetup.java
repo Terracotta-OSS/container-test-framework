@@ -8,8 +8,8 @@ import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
 import com.tc.test.server.appserver.load.LowMemWorkaround;
 import com.tc.text.Banner;
+import com.tc.util.TcConfigBuilder;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 
@@ -17,20 +17,26 @@ import junit.extensions.TestSetup;
 import junit.framework.TestSuite;
 
 public class ServerTestSetup extends TestSetup {
-  private final Class      testClass;
-  private final Collection extraJvmArgs;
-  private final boolean    persistentMode;
-  private ServerManager    sm;
+  private final Class           testClass;
+  private final TcConfigBuilder tcConfigBuilder;
+  private ServerManager         sm;
 
-  public ServerTestSetup(Class testClass) {
-    this(testClass, false, Collections.EMPTY_LIST);
+  public ServerTestSetup(Class<? extends AbstractDeploymentTestCase> testClass) {
+    this(testClass, null);
   }
 
-  public ServerTestSetup(Class testClass, boolean persistentMode, Collection extraJvmArgs) {
+  public ServerTestSetup(Class<? extends AbstractDeploymentTestCase> testClass, TcConfigBuilder configBuilder) {
     super(new TestSuite(testClass));
     this.testClass = testClass;
-    this.persistentMode = persistentMode;
-    this.extraJvmArgs = extraJvmArgs;
+    this.tcConfigBuilder = configBuilder == null ? new TcConfigBuilder() : configBuilder;
+  }
+
+  protected Class getTestClass() {
+    return testClass;
+  }
+
+  protected TcConfigBuilder getTcConfigBuilder() {
+    return tcConfigBuilder;
   }
 
   @Override
@@ -55,7 +61,7 @@ public class ServerTestSetup extends TestSetup {
     if (sm == null) {
       try {
         sm = ServerManagerUtil.startAndBind(testClass, isWithPersistentStore(), getSessionLocking(),
-                                            getSynchronousWrite(), extraJvmArgs);
+                                            getSynchronousWrite(), Collections.EMPTY_LIST);
       } catch (Exception e) {
         throw new RuntimeException("Unable to create server manager", e);
       }
@@ -71,8 +77,9 @@ public class ServerTestSetup extends TestSetup {
     return getServerManager().makeDeploymentBuilder(warFileName);
   }
 
-  public boolean isWithPersistentStore() {
-    return persistentMode;
+  protected boolean isWithPersistentStore() {
+    // override if you please
+    return false;
   }
 
   public boolean shouldDisable() {
@@ -88,19 +95,27 @@ public class ServerTestSetup extends TestSetup {
     return false;
   }
 
-  /**
-   * Not to be overriden. It's a util function to query session locking status. To change locking please override
-   * getSessionLocking() instead
-   */
+  private AbstractDeploymentTestCase getTestCase() {
+    TestSuite suite = (TestSuite) getTest();
+    int count = suite.testCount();
+    if (count != 1) { throw new AssertionError("Expecting 1 test case, there are " + count); }
+
+    return ((AbstractDeploymentTestCase) suite.testAt(0));
+  }
+
+  // This method not meant to be overridden -- do it in the test case itself (not the test setup)
   public final boolean isSessionLockingTrue() {
-    return Boolean.TRUE.equals(getSessionLocking());
+    return getTestCase().isSessionLockingTrue();
   }
 
-  protected Boolean getSessionLocking() {
-    return null;
+  // This method not meant to be overridden -- do it in the test case itself (not the test setup)
+  private final Boolean getSessionLocking() {
+    return getTestCase().getSessionLocking();
   }
 
-  protected Boolean getSynchronousWrite() {
-    return null;
+  // This method not meant to be overridden -- do it in the test case itself (not the test setup)
+  private final Boolean getSynchronousWrite() {
+    return getTestCase().getSynchronousWrite();
   }
+
 }
