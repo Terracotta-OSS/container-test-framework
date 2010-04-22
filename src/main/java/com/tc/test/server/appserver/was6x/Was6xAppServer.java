@@ -2,12 +2,9 @@ package com.tc.test.server.appserver.was6x;
 
 import org.apache.commons.io.IOUtils;
 
-import com.tc.logging.TCLogger;
-import com.tc.logging.TCLogging;
 import com.tc.process.Exec;
 import com.tc.process.Exec.Result;
 import com.tc.test.TestConfigObject;
-import com.tc.test.server.Server;
 import com.tc.test.server.ServerParameters;
 import com.tc.test.server.ServerResult;
 import com.tc.test.server.appserver.AbstractAppServer;
@@ -32,35 +29,32 @@ import java.util.Set;
 
 public class Was6xAppServer extends AbstractAppServer {
 
-  private static final TCLogger logger                     = TCLogging.getLogger(Server.class);
+  private static final String TERRACOTTA_PY              = "terracotta.py";
+  private static final String DEPLOY_APPS_PY             = "deployApps.py";
+  private static final String ENABLE_DSO_PY              = "enable-dso.py";
+  private static final String DSO_JVMARGS                = "__DSO_JVMARGS__";
+  private static final String PORTS_DEF                  = "ports.def";
+  private static final int    START_STOP_TIMEOUT_SECONDS = 5 * 60;
 
-  private static final String   TERRACOTTA_PY              = "terracotta.py";
-  private static final String   DEPLOY_APPS_PY             = "deployApps.py";
-  private static final String   ENABLE_DSO_PY              = "enable-dso.py";
-  private static final String   DSO_JVMARGS                = "__DSO_JVMARGS__";
-  private static final String   PORTS_DEF                  = "ports.def";
-  private static final int      START_STOP_TIMEOUT_SECONDS = 5 * 60;
+  private String[]            scripts                    = new String[] { DEPLOY_APPS_PY, TERRACOTTA_PY, ENABLE_DSO_PY };
 
-  private String[]              scripts                    = new String[] { DEPLOY_APPS_PY, TERRACOTTA_PY,
-      ENABLE_DSO_PY                                       };
+  private String              policy                     = "grant codeBase \"file:FILENAME\" {"
+                                                           + IOUtils.LINE_SEPARATOR
+                                                           + "  permission java.security.AllPermission;"
+                                                           + IOUtils.LINE_SEPARATOR + "};" + IOUtils.LINE_SEPARATOR;
+  private String              instanceName;
+  private String              dsoJvmArgs;
+  private int                 webspherePort;
+  private File                sandbox;
+  private File                instanceDir;
+  private File                pyScriptsDir;
+  private File                dataDir;
+  private File                warDir;
+  private File                portDefFile;
+  private File                serverInstallDir;
+  private File                extraScript;
 
-  private String                policy                     = "grant codeBase \"file:FILENAME\" {"
-                                                             + IOUtils.LINE_SEPARATOR
-                                                             + "  permission java.security.AllPermission;"
-                                                             + IOUtils.LINE_SEPARATOR + "};" + IOUtils.LINE_SEPARATOR;
-  private String                instanceName;
-  private String                dsoJvmArgs;
-  private int                   webspherePort;
-  private File                  sandbox;
-  private File                  instanceDir;
-  private File                  pyScriptsDir;
-  private File                  dataDir;
-  private File                  warDir;
-  private File                  portDefFile;
-  private File                  serverInstallDir;
-  private File                  extraScript;
-
-  private Thread                serverThread;
+  private Thread              serverThread;
 
   public Was6xAppServer(Was6xAppServerInstallation installation) {
     super(installation);
@@ -92,7 +86,7 @@ public class Was6xAppServer extends AbstractAppServer {
     serverThread.setDaemon(true);
     serverThread.start();
     AppServerUtil.waitForPort(webspherePort, START_STOP_TIMEOUT_SECONDS * 1000);
-    logger.info("Websphere instance " + instanceName + " started on port " + webspherePort);
+    System.out.println("Websphere instance " + instanceName + " started on port " + webspherePort);
     return new AppServerResult(webspherePort, this);
   }
 
@@ -121,16 +115,13 @@ public class Was6xAppServer extends AbstractAppServer {
       String line = (String) lines.get(i);
       lines.set(i, line + portChooser.chooseRandomPort());
     }
-    if (logger.isDebugEnabled()) {
-      logger.debug("createPortFile() using ports: " + lines);
-    }
 
     writeLines(lines, portDefFile, false);
   }
 
   private void copyPythonScripts() throws Exception {
     for (int i = 0; i < scripts.length; i++) {
-      logger.debug("copyPythonScripts(): copying file[" + scripts[i] + "] to directory [" + pyScriptsDir + "]");
+      System.out.println("copyPythonScripts(): copying file[" + scripts[i] + "] to directory [" + pyScriptsDir + "]");
       copyResourceTo(scripts[i], new File(pyScriptsDir, scripts[i]));
     }
   }
@@ -145,13 +136,7 @@ public class Was6xAppServer extends AbstractAppServer {
     for (int i = 0; i < lines.size(); i++) {
       String line = (String) lines.get(i);
       if (line.indexOf(DSO_JVMARGS) >= 0) {
-        if (logger.isDebugEnabled()) {
-          logger.debug("patchTerracottaPy(): patching line: " + line);
-        }
         line = line.replaceFirst(DSO_JVMARGS, dsoJvmArgs);
-        if (logger.isDebugEnabled()) {
-          logger.debug("patchTerracottaPy(): after patching line: " + line);
-        }
         lines.set(i, line);
       }
     }
@@ -182,25 +167,25 @@ public class Was6xAppServer extends AbstractAppServer {
     String[] args = new String[] { "-create", "-templatePath", defaultTemplate, "-profileName", instanceName,
         "-profilePath", instanceDir.getAbsolutePath(), "-portsFile", portDefFile.getAbsolutePath(),
         "-enableAdminSecurity", "false", "-isDeveloperServer" };
-    logger.info("Creating profile for instance " + instanceName + "...");
+    System.out.println("Creating profile for instance " + instanceName + "...");
     long start = System.currentTimeMillis();
     executeCommand(serverInstallDir, "manageprofiles", args, serverInstallDir, "Error in creating profile for "
                                                                                + instanceName);
     long elapsedMillis = System.currentTimeMillis() - start;
     long elapsedSeconds = elapsedMillis / 1000;
     Long elapsedMinutes = new Long(elapsedSeconds / 60);
-    logger.info("Profile creation time: "
-                + MessageFormat.format("{0,number,##}:{1}.{2}", new Object[] { elapsedMinutes,
-                    new Long(elapsedSeconds % 60), new Long(elapsedMillis % 1000) }));
+    System.out.println("Profile creation time: "
+                       + MessageFormat.format("{0,number,##}:{1}.{2}", new Object[] { elapsedMinutes,
+                           new Long(elapsedSeconds % 60), new Long(elapsedMillis % 1000) }));
   }
 
   private void verifyProfile() throws Exception {
     if (!(instanceDir.exists() && instanceDir.isDirectory())) {
       Exception e = new Exception("Unable to verify profile for instance '" + instanceName + "'");
-      logger.error("WebSphere profile '" + instanceName + "' does not exist at " + instanceDir.getAbsolutePath(), e);
+      System.err.println("WebSphere profile '" + instanceName + "' does not exist at " + instanceDir.getAbsolutePath());
       throw e;
     }
-    logger.info("WebSphere profile '" + instanceName + "' is verified at " + instanceDir.getAbsolutePath());
+    System.out.println("WebSphere profile '" + instanceName + "' is verified at " + instanceDir.getAbsolutePath());
   }
 
   private void deleteProfileIfExists() throws Exception {
@@ -260,9 +245,9 @@ public class Was6xAppServer extends AbstractAppServer {
   private void deployWarFile() throws Exception {
     String[] args = new String[] { "-lang", "jython", "-connType", "NONE", "-profileName", instanceName, "-f",
         new File(pyScriptsDir, DEPLOY_APPS_PY).getAbsolutePath(), warDir.getAbsolutePath().replace('\\', '/') };
-    logger.info("Deploying war file in: " + warDir);
+    System.out.println("Deploying war file in: " + warDir);
     executeCommand(serverInstallDir, "wsadmin", args, pyScriptsDir, "Error in deploying warfile for " + instanceName);
-    logger.info("Done deploying war file in: " + warDir);
+    System.out.println("Done deploying war file in: " + warDir);
   }
 
   private void startWebsphere() throws Exception {
@@ -301,16 +286,14 @@ public class Was6xAppServer extends AbstractAppServer {
     }
     dsoJvmArgs = sb.toString();
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("init{sandbox}          ==> " + sandbox.getAbsolutePath());
-      logger.debug("init{instanceName}     ==> " + instanceName);
-      logger.debug("init{instanceDir}      ==> " + instanceDir.getAbsolutePath());
-      logger.debug("init{webappDir}        ==> " + dataDir.getAbsolutePath());
-      logger.debug("init{pyScriptsDir}     ==> " + pyScriptsDir.getAbsolutePath());
-      logger.debug("init{portDefFile}      ==> " + portDefFile.getAbsolutePath());
-      logger.debug("init{serverInstallDir} ==> " + serverInstallDir.getAbsolutePath());
-      logger.debug("init{dsoJvmArgs}       ==> " + dsoJvmArgs);
-    }
+    System.out.println("init{sandbox}          ==> " + sandbox.getAbsolutePath());
+    System.out.println("init{instanceName}     ==> " + instanceName);
+    System.out.println("init{instanceDir}      ==> " + instanceDir.getAbsolutePath());
+    System.out.println("init{webappDir}        ==> " + dataDir.getAbsolutePath());
+    System.out.println("init{pyScriptsDir}     ==> " + pyScriptsDir.getAbsolutePath());
+    System.out.println("init{portDefFile}      ==> " + portDefFile.getAbsolutePath());
+    System.out.println("init{serverInstallDir} ==> " + serverInstallDir.getAbsolutePath());
+    System.out.println("init{dsoJvmArgs}       ==> " + dsoJvmArgs);
   }
 
   private String getScriptPath(File root, String scriptName) {
@@ -324,18 +307,15 @@ public class Was6xAppServer extends AbstractAppServer {
     String[] cmd = new String[args.length + 1];
     cmd[0] = script;
     System.arraycopy(args, 0, cmd, 1, args.length);
-    logger.info("Executing cmd: " + Arrays.asList(cmd));
+    System.out.println("Executing cmd: " + Arrays.asList(cmd));
     Result result = Exec.execute(cmd, null, null, workingDir == null ? instanceDir : workingDir);
     final StringBuffer stdout = new StringBuffer(result.getStdout());
     final StringBuffer stderr = new StringBuffer(result.getStderr());
-    if (logger.isDebugEnabled()) {
-      logger.debug("STDOUT for[" + Arrays.asList(cmd) + "]:\n" + stdout);
-      logger.debug("STDERR for[" + Arrays.asList(cmd) + "]:\n" + stderr);
-    }
+
     if (result.getExitCode() != 0) {
-      logger.warn("Command did not return 0; message is: " + errorMessage);
-      logger.warn("STDOUT for[" + Arrays.asList(cmd) + "]:\n" + stdout);
-      logger.warn("STDERR for[" + Arrays.asList(cmd) + "]:\n" + stderr);
+      System.out.println("Command did not return 0; message is: " + errorMessage);
+      System.out.println("STDOUT for[" + Arrays.asList(cmd) + "]:\n" + stdout);
+      System.out.println("STDERR for[" + Arrays.asList(cmd) + "]:\n" + stderr);
     }
     return stdout.append(IOUtils.LINE_SEPARATOR).append(stderr).toString();
   }
