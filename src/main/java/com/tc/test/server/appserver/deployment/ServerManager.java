@@ -50,6 +50,9 @@ import junit.framework.Assert;
 
 public class ServerManager {
   private static final String EXPRESS_MODE_LOAD_CLASS      = "org.terracotta.session.TerracottaWeblogic10xSessionFilter";
+
+  private static final String EXPRESS_RUNTIME_LOAD_CLASS   = "org.terracotta.express.Client";
+
   private static final String SESSION_TIM_TESTS_PROPERTIES = "/com/tctest/session-tim/tests.properties";
 
   private static class TimGetUrls {
@@ -553,9 +556,18 @@ public class ServerManager {
   }
 
   private void addExpressModeParams(StandardAppServerParameters params) {
+    setupExpressJarContaining(params, EXPRESS_MODE_LOAD_CLASS);
+    setupExpressJarContaining(params, EXPRESS_RUNTIME_LOAD_CLASS);
+
+    if (config.appServerId() == AppServerInfo.TOMCAT) {
+      params.addValve(makeValveDef());
+    }
+  }
+
+  private void setupExpressJarContaining(StandardAppServerParameters params, String className) {
     File expressJar;
     try {
-      expressJar = new File(Util.jarFor(Class.forName(EXPRESS_MODE_LOAD_CLASS)));
+      expressJar = new File(Util.jarFor(Class.forName(className)));
     } catch (ClassNotFoundException e1) {
       throw new RuntimeException(e1);
     }
@@ -571,16 +583,13 @@ public class ServerManager {
     }
 
     params.addTomcatServerJar(sandBoxArtifact.getAbsolutePath());
-
-    if (config.appServerId() == AppServerInfo.TOMCAT) {
-      params.addValve(makeValveDef());
-    }
   }
 
   private void addExpressModeWarConfig(DeploymentBuilder builder) {
     if (useFilter()) {
       try {
         builder.addDirectoryOrJARContainingClass(Class.forName(EXPRESS_MODE_LOAD_CLASS));
+        builder.addDirectoryOrJARContainingClass(Class.forName(EXPRESS_RUNTIME_LOAD_CLASS));
       } catch (ClassNotFoundException e1) {
         throw new RuntimeException(e1);
       }
