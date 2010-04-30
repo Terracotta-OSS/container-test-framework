@@ -195,10 +195,10 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     if (ENABLE_DEBUGGER) {
       int debugPort = 8000 + serverId;
       if (appId == AppServerInfo.WEBSPHERE) {
-        parameters.appendJvmArgs("-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address="
+        parameters.appendJvmArgs("-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address="
                                  + debugPort + " -Djava.compiler=NONE");
       } else {
-        parameters.appendJvmArgs("-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=" + debugPort);
+        parameters.appendJvmArgs("-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + debugPort);
       }
       parameters.appendSysProp("aspectwerkz.transform.verbose", true);
       parameters.appendSysProp("aspectwerkz.transform.details", true);
