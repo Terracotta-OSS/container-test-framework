@@ -15,7 +15,7 @@
 
   <properties>
     <tc.version>3.2.1</tc.version>
-    <tc-api.version>1.2.2-SNAPSHOT</tc-api.version>
+    <tc-api.version>1.2.1</tc-api.version>
   </properties>
 
   <dependencies>
