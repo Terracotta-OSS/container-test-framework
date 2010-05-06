@@ -64,7 +64,7 @@ public class ServerManager {
 
   // The internal repository is listed first since it is the preferred repo
   private static final TimGetUrls[]   TIM_GET_URLS   = {
-      new TimGetUrls("http://kong/repo/staging/tim-get/2/index.xml.gz", "http://kong/repo/staging"), /* staging */
+      //new TimGetUrls("http://kong/repo/staging/tim-get/2/index.xml.gz", "http://kong/repo/staging"), /* staging */
       new TimGetUrls("http://kong/repo/snapshots/tim-get/2/index.xml.gz", "http://kong/repo/snapshots"), /* snapshots */
       new TimGetUrls("http://kong/repo/releases/tim-get/2/index.xml.gz", "http://kong/repo/releases"), /* release */
       new TimGetUrls("http://www.terracotta.org/download/reflector/snapshots/tim-get/2/index.xml.gz", /* S3 */
