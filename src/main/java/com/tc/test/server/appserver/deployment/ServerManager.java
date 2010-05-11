@@ -4,22 +4,6 @@
  */
 package com.tc.test.server.appserver.deployment;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import junit.framework.Assert;
-
 import org.terracotta.modules.tool.config.Config;
 import org.terracotta.modules.tool.exception.ModuleNotFoundException;
 import org.terracotta.modules.tool.exception.RemoteIndexIOException;
@@ -39,6 +23,22 @@ import com.tc.util.ProductInfo;
 import com.tc.util.TcConfigBuilder;
 import com.tc.util.runtime.Os;
 import com.tc.util.runtime.Vm;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import junit.framework.Assert;
 
 public class ServerManager {
 
@@ -64,7 +64,7 @@ public class ServerManager {
 
   // The internal repository is listed first since it is the preferred repo
   private static final TimGetUrls[]   TIM_GET_URLS   = {
-      //new TimGetUrls("http://kong/repo/staging/tim-get/2/index.xml.gz", "http://kong/repo/staging"), /* staging */
+      // new TimGetUrls("http://kong/repo/staging/tim-get/2/index.xml.gz", "http://kong/repo/staging"), /* staging */
       new TimGetUrls("http://kong/repo/snapshots/tim-get/2/index.xml.gz", "http://kong/repo/snapshots"), /* snapshots */
       new TimGetUrls("http://kong/repo/releases/tim-get/2/index.xml.gz", "http://kong/repo/releases"), /* release */
       new TimGetUrls("http://www.terracotta.org/download/reflector/snapshots/tim-get/2/index.xml.gz", /* S3 */
@@ -464,18 +464,18 @@ public class ServerManager {
 
     for (TimGetUrls urls : TIM_GET_URLS) {
       try {
-    	Properties timgetProps = new Properties();
-    	
-    	timgetProps.setProperty(Config.KEYSPACE + Config.TC_VERSION, ProductInfo.getInstance().mavenArtifactsVersion());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.API_VERSION, ProductInfo.getInstance().apiVersion());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.INCLUDE_SNAPSHOTS, "true");
-    	timgetProps.setProperty(Config.KEYSPACE + Config.MODULES_DIR, getTimGetModulesDir());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.CACHE, this.sandbox.getAbsolutePath());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.DATA_FILE_URL, urls.getUrl());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.RELATIVE_URL_BASE, urls.getRelativeUrlBase());
-    	timgetProps.setProperty(Config.KEYSPACE + Config.DATA_CACHE_EXPIRATION, "0");
+        Properties timgetProps = new Properties();
 
-        new TIMGetTool("install " + name + " -u", timgetProps);
+        timgetProps.setProperty(Config.KEYSPACE + Config.TC_VERSION, ProductInfo.getInstance().mavenArtifactsVersion());
+        timgetProps.setProperty(Config.KEYSPACE + Config.API_VERSION, ProductInfo.getInstance().apiVersion());
+        timgetProps.setProperty(Config.KEYSPACE + Config.INCLUDE_SNAPSHOTS, "true");
+        timgetProps.setProperty(Config.KEYSPACE + Config.MODULES_DIR, getTimGetModulesDir());
+        timgetProps.setProperty(Config.KEYSPACE + Config.CACHE, this.sandbox.getAbsolutePath());
+        timgetProps.setProperty(Config.KEYSPACE + Config.DATA_FILE_URL, urls.getUrl());
+        timgetProps.setProperty(Config.KEYSPACE + Config.RELATIVE_URL_BASE, urls.getRelativeUrlBase());
+        timgetProps.setProperty(Config.KEYSPACE + Config.DATA_CACHE_EXPIRATION, "0");
+
+        new TIMGetTool("install " + name + " -u --no-verify", timgetProps);
 
         // This is a bit of hack, but without some mods to tim-get I'm not sure how to determine the version
         File src = new File(getTimGetModulesDir() + "/org/terracotta/modules/" + name);
@@ -489,7 +489,8 @@ public class ServerManager {
         Banner.infoBanner("Repository location not available [" + urls.getUrl()
                           + "] for tim-get, moving on to the next one");
       } catch (ModuleNotFoundException e) {
-    	Banner.infoBanner("Module " + name + " couldn't be found on this repo " + urls.getUrl() + ", trying the next one");
+        Banner.infoBanner("Module " + name + " couldn't be found on this repo " + urls.getUrl()
+                          + ", trying the next one");
       } catch (Exception e) {
         Banner.errorBanner("Unexpected error using url [" + urls.getUrl() + "] for tim-get, trying the next one");
         e.printStackTrace();
