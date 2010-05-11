@@ -490,7 +490,6 @@ public class ServerManager {
         Properties timgetProps = new Properties();
 
         timgetProps.setProperty(Config.KEYSPACE + Config.TC_VERSION, ProductInfo.getInstance().mavenArtifactsVersion());
-        timgetProps.setProperty(Config.KEYSPACE + Config.API_VERSION, ProductInfo.getInstance().apiVersion());
         timgetProps.setProperty(Config.KEYSPACE + Config.INCLUDE_SNAPSHOTS, "true");
         timgetProps.setProperty(Config.KEYSPACE + Config.MODULES_DIR, getTimGetModulesDir());
         timgetProps.setProperty(Config.KEYSPACE + Config.CACHE, this.sandbox.getAbsolutePath());
