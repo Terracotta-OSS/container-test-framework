@@ -15,7 +15,6 @@
 
   <properties>
     <tc.version>3.3.0-SNAPSHOT</tc.version>
-    <test-api.version>1.3.0-SNAPSHOT</test-api.version>
   </properties>
 
   <dependencies>
@@ -28,7 +27,7 @@
     <dependency>
       <groupId>org.terracotta.api</groupId>
       <artifactId>test-api</artifactId>
-      <version>${test-api.version}</version>
+      <version>${tc.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
