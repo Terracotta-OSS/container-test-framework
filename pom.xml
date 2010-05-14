@@ -23,13 +23,11 @@
       <groupId>org.terracotta</groupId>
       <artifactId>terracotta</artifactId>
       <version>${tc.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.terracotta.api</groupId>
       <artifactId>test-api</artifactId>
       <version>${tc-api.version}</version>
-      <scope>provided<scope>
     </dependency>
     <dependency>
       <groupId>org.terracotta</groupId>
