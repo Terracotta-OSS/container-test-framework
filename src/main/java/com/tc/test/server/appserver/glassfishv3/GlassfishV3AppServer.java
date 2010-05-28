@@ -4,10 +4,6 @@
  */
 package com.tc.test.server.appserver.glassfishv3;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.tc.process.Exec;
 import com.tc.process.Exec.Result;
 import com.tc.test.server.ServerParameters;
@@ -19,6 +15,10 @@ import com.tc.test.server.appserver.glassfish.GlassfishAppServerInstallation;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.test.server.util.RetryException;
 import com.tc.text.Banner;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
 
@@ -36,13 +36,13 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
     return new File(new File(new File(serverInstallDirectory(), "glassfish"), "bin"), getPlatformScript("stopserv"));
   }
 
+  @Override
   protected ServerResult start0(final AppServerParameters params) throws Exception {
     instanceDir = createInstance(params);
 
     instanceDir.delete(); // createDomain will fail if directory already exists
-    if (instanceDir.exists()) {
-      throw new RuntimeException("Instance dir must not exist: " + instanceDir.getAbsolutePath());
-    }
+    if (instanceDir.exists()) { throw new RuntimeException("Instance dir must not exist: "
+                                                           + instanceDir.getAbsolutePath()); }
 
     createDomain(params);
 
@@ -52,8 +52,8 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
 
     File startScript = getStartScript(params);
 
-    final String cmd[] = new String[] { startScript.getAbsolutePath(), "--domaindir", instanceDir.getParentFile().getAbsolutePath(),
-        params.instanceName() };
+    final String cmd[] = new String[] { startScript.getAbsolutePath(), "--domaindir",
+        instanceDir.getParentFile().getAbsolutePath(), params.instanceName() };
 
     final File nodeLogFile = new File(instanceDir.getParent(), instanceDir.getName() + ".log");
     final Process process = Runtime.getRuntime().exec(cmd, null, instanceDir);
@@ -83,16 +83,13 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
       }
 
       if (!runner.isAlive()) {
-        if (amxDebugCheck(nodeLogFile)) {
-          throw new RetryException("NPE in AMXDebug");
-        }
+        if (amxDebugCheck(nodeLogFile)) { throw new RetryException("NPE in AMXDebug"); }
         throw new RuntimeException("Runner thread finished before timeout");
       }
     }
 
-    if (!started) {
-      throw new RuntimeException("Failed to start server in " + AbstractGlassfishAppServer.START_STOP_TIMEOUT + "ms");
-    }
+    if (!started) { throw new RuntimeException("Failed to start server in "
+                                               + AbstractGlassfishAppServer.START_STOP_TIMEOUT + "ms"); }
 
     System.err.println("Started " + params.instanceName() + " on port " + httpPort);
 
@@ -100,18 +97,19 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
 
     deployWars(process, nodeLogFile, params.wars());
 
-    waitForPing();
+    waitForPing(nodeLogFile);
 
     return new AppServerResult(httpPort, this);
   }
 
+  @Override
   public void stop(final ServerParameters rawParams) throws Exception {
     AppServerParameters params = (AppServerParameters) rawParams;
     System.err.println("Stopping instance on port " + httpPort + "...");
 
     File stopScript = getStopScript(params);
-    final String cmd[] = new String[] { stopScript.getAbsolutePath(), "--domaindir", instanceDir.getParentFile().getAbsolutePath(),
-        params.instanceName() };
+    final String cmd[] = new String[] { stopScript.getAbsolutePath(), "--domaindir",
+        instanceDir.getParentFile().getAbsolutePath(), params.instanceName() };
 
     Result result = Exec.execute(cmd, null, null, stopScript.getParentFile());
     if (result.getExitCode() != 0) {
@@ -146,18 +144,16 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
     cmd.add("--savemasterpassword=true");
     cmd.add("--domaindir=" + sandboxDirectory());
     cmd.add("--domainproperties");
-    cmd.add("jms.port=" + pc.chooseRandomPort() + ":" + "orb.listener.port=" + pc.chooseRandomPort() + ":" + "http.ssl.port="
-        + pc.chooseRandomPort() + ":" + "orb.ssl.port=" + pc.chooseRandomPort() + ":" + "orb.mutualauth.port=" + pc.chooseRandomPort()
-        + ":" + "domain.jmxPort=" + pc.chooseRandomPort());
+    cmd.add("jms.port=" + pc.chooseRandomPort() + ":" + "orb.listener.port=" + pc.chooseRandomPort() + ":"
+            + "http.ssl.port=" + pc.chooseRandomPort() + ":" + "orb.ssl.port=" + pc.chooseRandomPort() + ":"
+            + "orb.mutualauth.port=" + pc.chooseRandomPort() + ":" + "domain.jmxPort=" + pc.chooseRandomPort());
     cmd.add("--savelogin=true");
     cmd.add("--nopassword=true");
     cmd.add(params.instanceName());
 
     Result result = Exec.execute((String[]) cmd.toArray(new String[] {}), null, null, asAdminScript.getParentFile());
 
-    if (result.getExitCode() != 0) {
-      throw new RuntimeException(result.toString());
-    }
+    if (result.getExitCode() != 0) { throw new RuntimeException(result.toString()); }
   }
 
   @Override
