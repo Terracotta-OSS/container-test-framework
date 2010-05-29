@@ -640,6 +640,7 @@ public class ServerManager {
       mappings.put("tomcat-5.5.", "TerracottaTomcat55xSessionValve");
       mappings.put("tomcat-6.0.", "TerracottaTomcat60xSessionValve");
       mappings.put("websphere-6.1.", "TerracottaWebsphere61xSessionFilter");
+      mappings.put("websphere-7.0.", "TerracottaWebsphere70xSessionFilter");
     }
 
     static String getClassForAppServer(AppServerInfo info) {

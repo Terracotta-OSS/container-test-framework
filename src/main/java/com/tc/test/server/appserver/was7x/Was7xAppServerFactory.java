@@ -2,7 +2,7 @@
  * All content copyright (c) 2003-2008 Terracotta, Inc., except as may otherwise be noted in a separate copyright
  * notice. All rights reserved.
  */
-package com.tc.test.server.appserver.was6x;
+package com.tc.test.server.appserver.was7x;
 
 import com.tc.test.AppServerInfo;
 import com.tc.test.server.appserver.AppServer;
@@ -18,10 +18,10 @@ import java.util.Properties;
  * This class creates specific implementations of return values for the given methods. To obtain an instance you must
  * call {@link NewAppServerFactory.createFactoryFromProperties()}.
  */
-public final class Was6xAppServerFactory extends AppServerFactory {
+public final class Was7xAppServerFactory extends AppServerFactory {
 
   // This class may only be instantiated by its parent which contains the ProtectedKey
-  public Was6xAppServerFactory(ProtectedKey protectedKey) {
+  public Was7xAppServerFactory(ProtectedKey protectedKey) {
     super(protectedKey);
   }
 
@@ -30,11 +30,11 @@ public final class Was6xAppServerFactory extends AppServerFactory {
   }
 
   public AppServer createAppServer(AppServerInstallation installation) {
-    return new Was6xAppServer(installation);
+    return new Was7xAppServer(installation);
   }
 
   public AppServerInstallation createInstallation(File home, File workingDir, AppServerInfo appServerInfo)
       throws Exception {
-    return new Was6xAppServerInstallation(home, workingDir, appServerInfo);
+    return new Was7xAppServerInstallation(home, workingDir, appServerInfo);
   }
 }

@@ -19,6 +19,7 @@ import com.tc.test.server.appserver.resin31x.Resin31xAppServerFactory;
 import com.tc.test.server.appserver.tomcat5x.Tomcat5xAppServerFactory;
 import com.tc.test.server.appserver.tomcat6x.Tomcat6xAppServerFactory;
 import com.tc.test.server.appserver.was6x.Was6xAppServerFactory;
+import com.tc.test.server.appserver.was7x.Was7xAppServerFactory;
 import com.tc.test.server.appserver.wasce1x.Wasce1xAppServerFactory;
 import com.tc.test.server.appserver.weblogic10x.Weblogic10xAppServerFactory;
 import com.tc.test.server.appserver.weblogic8x.Weblogic8xAppServerFactory;
@@ -94,6 +95,7 @@ public abstract class AppServerFactory {
         break;
       case AppServerInfo.WEBSPHERE:
         if ("6".equals(majorVersion)) return new Was6xAppServerFactory(new ProtectedKey());
+        if ("7".equals(majorVersion)) return new Was7xAppServerFactory(new ProtectedKey());
         break;        
     }
 
