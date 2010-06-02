@@ -76,6 +76,7 @@ public class WebsphereAppServer extends AbstractAppServer {
     verifyProfile();
     deployWarFile();
     addTerracottaToServerPolicy();
+    enableDSO();
     if (extraScript != null) {
       executeJythonScript(extraScript);
     }
@@ -152,6 +153,12 @@ public class WebsphereAppServer extends AbstractAppServer {
       System.out.println("copyPythonScripts(): copying file[" + script + "] to directory [" + pyScriptsDir + "]");
       copyResourceTo(script, new File(pyScriptsDir, script));
     }
+  }
+
+  private void enableDSO() throws Exception {
+    String[] args = new String[] { "-lang", "jython", "-connType", "NONE", "-profileName", instanceName, "-f",
+        new File(pyScriptsDir, ENABLE_DSO_PY).getAbsolutePath() };
+    executeCommand(serverInstallDir, "wsadmin", args, pyScriptsDir, "Error in enabling DSO for " + instanceName);
   }
 
   private void patchTerracottaPy() throws FileNotFoundException, IOException, Exception {
