@@ -3,6 +3,7 @@
  */
 package com.tc.test.server.appserver.websphere;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.tc.process.Exec;
@@ -15,6 +16,7 @@ import com.tc.test.server.appserver.AppServerInstallation;
 import com.tc.test.server.appserver.AppServerParameters;
 import com.tc.test.server.appserver.AppServerResult;
 import com.tc.test.server.util.AppServerUtil;
+import com.tc.text.Banner;
 import com.tc.util.PortChooser;
 import com.tc.util.runtime.Os;
 
@@ -40,9 +42,9 @@ public class WebsphereAppServer extends AbstractAppServer {
   private static final String PORTS_DEF                  = "ports.def";
   private static final int    START_STOP_TIMEOUT_SECONDS = 5 * 60;
 
-  private String[]            scripts                    = new String[] { DEPLOY_APPS_PY, TERRACOTTA_PY, ENABLE_DSO_PY };
+  private final String[]      scripts                    = new String[] { DEPLOY_APPS_PY, TERRACOTTA_PY, ENABLE_DSO_PY };
 
-  private String              policy                     = "grant codeBase \"file:FILENAME\" {"
+  private final String        policy                     = "grant codeBase \"file:FILENAME\" {"
                                                            + IOUtils.LINE_SEPARATOR
                                                            + "  permission java.security.AllPermission;"
                                                            + IOUtils.LINE_SEPARATOR + "};" + IOUtils.LINE_SEPARATOR;
@@ -78,6 +80,7 @@ public class WebsphereAppServer extends AbstractAppServer {
       executeJythonScript(extraScript);
     }
     serverThread = new Thread() {
+      @Override
       public void run() {
         try {
           startWebsphere();
@@ -99,11 +102,33 @@ public class WebsphereAppServer extends AbstractAppServer {
     } catch (Exception e) {
       // ignored
     } finally {
+      // copy the terracotta client log files into a place that won't be destroy when profile is deleted
+      copyClientLogs();
+
       try {
         deleteProfile();
       } catch (Exception e2) {
         // ignored
       }
+    }
+  }
+
+  private void copyClientLogs() {
+    File srcDir = new File(instanceDir, "terracotta");
+
+    if (srcDir.isDirectory()) {
+      File dstDir = new File(instanceDir, "logs");
+      if (dstDir.isDirectory()) {
+        try {
+          FileUtils.copyDirectoryToDirectory(srcDir, dstDir);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      } else {
+        Banner.warnBanner(dstDir + " is not a directory?");
+      }
+    } else {
+      Banner.warnBanner(srcDir + " is not a directory?");
     }
   }
 
@@ -123,9 +148,9 @@ public class WebsphereAppServer extends AbstractAppServer {
   }
 
   private void copyPythonScripts() throws Exception {
-    for (int i = 0; i < scripts.length; i++) {
-      System.out.println("copyPythonScripts(): copying file[" + scripts[i] + "] to directory [" + pyScriptsDir + "]");
-      copyResourceTo(scripts[i], new File(pyScriptsDir, scripts[i]));
+    for (String script : scripts) {
+      System.out.println("copyPythonScripts(): copying file[" + script + "] to directory [" + pyScriptsDir + "]");
+      copyResourceTo(script, new File(pyScriptsDir, script));
     }
   }
 
@@ -201,8 +226,8 @@ public class WebsphereAppServer extends AbstractAppServer {
     String classpath = System.getProperty("java.class.path");
     Set set = new HashSet();
     String[] entries = classpath.split(File.pathSeparator);
-    for (int i = 0; i < entries.length; i++) {
-      File filename = new File(entries[i]);
+    for (String entrie : entries) {
+      File filename = new File(entrie);
       if (filename.isDirectory()) {
         set.add(filename);
       } else {
