@@ -31,7 +31,7 @@ class DSO:
         self.p_toggleDso(None)
 
     def getGenericJvmArguments(self):
-        return string.split(self.AdminTask.showJVMProperties(['-propertyName', 'genericJvmArguments']))
+        return string.split(self.AdminTask.showJVMProperties('[-serverName server1 -propertyName genericJvmArguments]'))
 
     def p_toggleDso(self, enable):
         jvmArgList = self.getGenericJvmArguments()
@@ -45,7 +45,7 @@ class DSO:
         self.p_info("New value of genericJvmArguments: " + str(self.getGenericJvmArguments()))
 
     def p_setGenericJvmArguments(self, argList):
-        self.AdminTask.setJVMProperties(["-genericJvmArguments '" + string.join(argList) + "'"])
+        self.AdminTask.setJVMProperties(['-serverName server1', "-genericJvmArguments '" + string.join(argList) + "'"])
 
     def p_filterOutDsoArgs(self, arg):
         for dsoArg in self.dsoArgs:

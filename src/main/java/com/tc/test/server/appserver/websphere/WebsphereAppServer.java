@@ -100,16 +100,20 @@ public class WebsphereAppServer extends AbstractAppServer {
   public void stop(ServerParameters parameters) throws Exception {
     try {
       stopWebsphere();
+      // ws lie about shuttting down completely. Sleep to give it
+      // some time to kill the process
+      Thread.sleep(5 * 1000);
     } catch (Exception e) {
-      // ignored
+      // don't fail the test by rethrowing
+      e.printStackTrace();
     } finally {
       // copy the terracotta client log files into a place that won't be destroy when profile is deleted
       copyClientLogs();
 
       try {
         deleteProfile();
-      } catch (Exception e2) {
-        // ignored
+      } catch (Exception e) {
+        e.printStackTrace();
       }
     }
   }
@@ -182,7 +186,7 @@ public class WebsphereAppServer extends AbstractAppServer {
   private void executeJythonScript(File script) throws Exception {
     String[] args = new String[] { "-lang", "jython", "-connType", "NONE", "-profileName", instanceName, "-f",
         script.getAbsolutePath() };
-    executeCommand(instanceDir, "wsadmin", args, pyScriptsDir, "Error executing " + script);
+    executeCommand(serverInstallDir, "wsadmin", args, pyScriptsDir, "Error executing " + script);
   }
 
   private void deleteProfile() throws Exception {
@@ -275,19 +279,19 @@ public class WebsphereAppServer extends AbstractAppServer {
     String[] args = new String[] { "-lang", "jython", "-connType", "NONE", "-profileName", instanceName, "-f",
         new File(pyScriptsDir, DEPLOY_APPS_PY).getAbsolutePath(), warDir.getAbsolutePath().replace('\\', '/') };
     System.out.println("Deploying war file in: " + warDir);
-    executeCommand(instanceDir, "wsadmin", args, pyScriptsDir, "Error in deploying warfile for " + instanceName);
+    executeCommand(serverInstallDir, "wsadmin", args, pyScriptsDir, "Error in deploying warfile for " + instanceName);
     System.out.println("Done deploying war file in: " + warDir);
   }
 
   private void startWebsphere() throws Exception {
     String[] args = new String[] { "server1", "-profileName", instanceName, "-trace", "-timeout",
         String.valueOf(START_STOP_TIMEOUT_SECONDS) };
-    executeCommand(instanceDir, "startServer", args, instanceDir, "Error in starting " + instanceName);
+    executeCommand(serverInstallDir, "startServer", args, instanceDir, "Error in starting " + instanceName);
   }
 
   private void stopWebsphere() throws Exception {
     String[] args = new String[] { "server1", "-profileName", instanceName };
-    executeCommand(instanceDir, "stopServer", args, instanceDir, "Error in stopping " + instanceName);
+    executeCommand(serverInstallDir, "stopServer", args, instanceDir, "Error in stopping " + instanceName);
     if (serverThread != null) {
       serverThread.join(START_STOP_TIMEOUT_SECONDS * 1000);
     }
@@ -346,7 +350,9 @@ public class WebsphereAppServer extends AbstractAppServer {
       System.out.println("STDOUT for[" + Arrays.asList(cmd) + "]:\n" + stdout);
       System.out.println("STDERR for[" + Arrays.asList(cmd) + "]:\n" + stderr);
     }
-    return stdout.append(IOUtils.LINE_SEPARATOR).append(stderr).toString();
+    String output = stdout.append(IOUtils.LINE_SEPARATOR).append(stderr).toString();
+    System.out.println("output: " + output);
+    return output;
   }
 
   private void writeLines(List lines, File filename, boolean append) throws Exception {
