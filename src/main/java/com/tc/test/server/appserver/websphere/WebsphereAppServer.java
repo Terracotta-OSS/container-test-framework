@@ -347,8 +347,6 @@ public class WebsphereAppServer extends AbstractAppServer {
 
     if (result.getExitCode() != 0) {
       System.out.println("Command did not return 0; message is: " + errorMessage);
-      System.out.println("STDOUT for[" + Arrays.asList(cmd) + "]:\n" + stdout);
-      System.out.println("STDERR for[" + Arrays.asList(cmd) + "]:\n" + stderr);
     }
     String output = stdout.append(IOUtils.LINE_SEPARATOR).append(stderr).toString();
     System.out.println("output: " + output);
