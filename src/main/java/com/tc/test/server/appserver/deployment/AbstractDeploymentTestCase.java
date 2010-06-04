@@ -96,8 +96,12 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   protected WebApplicationServer makeWebApplicationServer(TcConfigBuilder configBuilder) throws Exception {
-    WebApplicationServer server = getServerManager().makeWebApplicationServer(configBuilder);
-    return server;
+    return getServerManager().makeWebApplicationServer(configBuilder);
+  }
+
+  protected WebApplicationServer makeWebApplicationServer(TcConfigBuilder configBuilder, boolean addExpress)
+      throws Exception {
+    return getServerManager().makeWebApplicationServer(configBuilder, addExpress);
   }
 
   protected void restartDSO() throws Exception {
@@ -105,8 +109,11 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   protected DeploymentBuilder makeDeploymentBuilder(String warFileName) {
-    DeploymentBuilder builder = getServerManager().makeDeploymentBuilder(warFileName);
-    return builder;
+    return getServerManager().makeDeploymentBuilder(warFileName);
+  }
+
+  protected DeploymentBuilder makeDeploymentBuilder(String warFileName, boolean enableExpress) {
+    return getServerManager().makeDeploymentBuilder(warFileName, enableExpress);
   }
 
   protected void waitForSuccess(int timeoutInSeconds, TestCallback callback) throws Throwable {

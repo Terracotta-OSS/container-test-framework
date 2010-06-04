@@ -212,12 +212,17 @@ public class ServerManager {
   }
 
   public WebApplicationServer makeWebApplicationServer(final TcConfigBuilder tcConfigBuilder) throws Exception {
+    return makeWebApplicationServer(tcConfigBuilder, config.isExpressMode());
+  }
+
+  public WebApplicationServer makeWebApplicationServer(final TcConfigBuilder tcConfigBuilder, boolean addExpress)
+      throws Exception {
     int i = ServerManager.appServerIndex++;
 
     WebApplicationServer appServer = new GenericServer(config, factory, installation,
                                                        prepareClientTcConfig(tcConfigBuilder).getTcConfigFile(), i,
                                                        tempDir);
-    if (config.isExpressMode()) {
+    if (addExpress) {
       addExpressModeParams(appServer.getServerParameters());
     }
     addServerToStop(appServer);
@@ -396,8 +401,12 @@ public class ServerManager {
   }
 
   public DeploymentBuilder makeDeploymentBuilder(final String warFileName) {
+    return makeDeploymentBuilder(warFileName, config.isExpressMode());
+  }
+
+  public DeploymentBuilder makeDeploymentBuilder(final String warFileName, boolean addExpressConfig) {
     DeploymentBuilder builder = new WARBuilder(warFileName, warDir, config);
-    if (config.isExpressMode()) {
+    if (addExpressConfig) {
       addExpressModeWarConfig(builder);
     }
     return builder;
