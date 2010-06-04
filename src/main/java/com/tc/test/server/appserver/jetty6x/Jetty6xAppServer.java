@@ -231,9 +231,7 @@ public class Jetty6xAppServer extends AbstractAppServer {
 
       startIndex = buffer.indexOf(eofTarget);
       if (startIndex > 0) {
-        if (GenericServer.dsoEnabled() && NEW_INTEGRATION) {
-          buffer.insert(startIndex, jettyXmlAddition(instanceName));
-        }
+        buffer.insert(startIndex, jettyXmlAddition(instanceName));
       } else {
         throw new RuntimeException("Can't find target: " + eofTarget);
       }
@@ -257,18 +255,29 @@ public class Jetty6xAppServer extends AbstractAppServer {
   }
 
   private String jettyXmlAddition(final String workerName) {
+    if (GenericServer.dsoEnabled() && NEW_INTEGRATION) {
+      String s = "";
+      s += "  <Set name=\"sessionIdManager\">\n";
+      s += "    <New id=\"tcIdMgr\" class=\"org.mortbay.terracotta.servlet.TerracottaSessionIdManager\">\n";
+      s += "      <Arg><Ref id=\"Server\"/></Arg>\n";
+      s += "      <Set name=\"workerName\">" + workerName + "</Set>\n";
+      s += "    </New>\n";
+      s += "  </Set>\n";
+      s += "  \n";
+      s += "  <Call name=\"setAttribute\">\n";
+      s += "    <Arg>tcIdMgr</Arg>\n";
+      s += "    <Arg><Ref id=\"tcIdMgr\"/></Arg>\n";
+      s += "  </Call>\n";
+      return s;
+    }
+
     String s = "";
     s += "  <Set name=\"sessionIdManager\">\n";
-    s += "    <New id=\"tcIdMgr\" class=\"org.mortbay.terracotta.servlet.TerracottaSessionIdManager\">\n";
-    s += "      <Arg><Ref id=\"Server\"/></Arg>\n";
+    s += "    <New id=\"idMgr\" class=\"org.mortbay.jetty.servlet.HashSessionIdManager\">\n";
     s += "      <Set name=\"workerName\">" + workerName + "</Set>\n";
     s += "    </New>\n";
     s += "  </Set>\n";
     s += "  \n";
-    s += "  <Call name=\"setAttribute\">\n";
-    s += "    <Arg>tcIdMgr</Arg>\n";
-    s += "    <Arg><Ref id=\"tcIdMgr\"/></Arg>\n";
-    s += "  </Call>\n";
     return s;
   }
 
