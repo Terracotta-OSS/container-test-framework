@@ -11,7 +11,7 @@
   <groupId>org.terracotta.test</groupId>
   <artifactId>container-test-framework</artifactId>
   <name>Container Test Framework</name>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.2-SNAPSHOT</version>
 
   <properties>
     <tc.version>3.2.2</tc.version>
