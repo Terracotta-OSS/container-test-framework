@@ -25,7 +25,9 @@ public class DSOServer extends AbstractStoppable {
 
   private int                       serverPort         = 9510;
   private int                       adminPort          = 9520;
-  private List                      jvmArgs            = new ArrayList();
+  private int                       groupPort          = 9530;
+
+  private final List                jvmArgs            = new ArrayList();
 
   private final File                workingDir;
   private TcConfigBuilder           configBuilder;
@@ -41,8 +43,10 @@ public class DSOServer extends AbstractStoppable {
     this.configBuilder = configBuilder;
     this.serverPort = configBuilder.getDsoPort();
     this.adminPort = configBuilder.getJmxPort();
+    this.groupPort = configBuilder.getGroupPort();
   }
 
+  @Override
   protected void doStart() throws Exception {
     File configFile = writeConfig();
     serverProc = new ExtraProcessServerControl("localhost", serverPort, adminPort, configFile.getAbsolutePath(), false);
@@ -51,6 +55,7 @@ public class DSOServer extends AbstractStoppable {
     serverProc.start();
   }
 
+  @Override
   protected void doStop() throws Exception {
     logger.debug("Stopping...");
     serverProc.shutdown();
@@ -69,6 +74,7 @@ public class DSOServer extends AbstractStoppable {
       L2ConfigBuilder l2 = builder.getServers().getL2s()[0];
       l2.setDSOPort(serverPort);
       l2.setJMXPort(adminPort);
+      l2.setL2GroupPort(groupPort);
       l2.setData(workingDir + File.separator + "data");
       l2.setLogs(workingDir + File.separator + "logs");
       if (withPersistentStore) {
@@ -86,6 +92,7 @@ public class DSOServer extends AbstractStoppable {
     return configFile;
   }
 
+  @Override
   public String toString() {
     return "DSO server; serverport:" + serverPort + "; adminPort:" + adminPort;
   }

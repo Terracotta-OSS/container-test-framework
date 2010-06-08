@@ -127,10 +127,12 @@ public class ServerManager {
     if (DEBUG_MODE) {
       serverTcConfig.setDsoPort(9510);
       serverTcConfig.setJmxPort(9520);
+      serverTcConfig.setGroupPort(9530);
     } else {
       PortChooser pc = new PortChooser();
       serverTcConfig.setDsoPort(pc.chooseRandomPort());
       serverTcConfig.setJmxPort(pc.chooseRandomPort());
+      serverTcConfig.setGroupPort(pc.chooseRandomPort());
     }
   }
 
