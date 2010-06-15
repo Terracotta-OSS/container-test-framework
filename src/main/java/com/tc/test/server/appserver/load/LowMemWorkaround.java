@@ -20,9 +20,9 @@ public class LowMemWorkaround {
   public static int computeNumberOfNodes(int defaultNum, int lowMemNum, AppServerInfo appServerInfo) {
     long memTotal = getMem();
 
-    if (memTotal < TWO_GIGABYTES) {
+    if (memTotal < TWO_GIGABYTES || appServerInfo.getId() == AppServerInfo.JBOSS) {
       Banner.warnBanner("Using " + lowMemNum + " nodes (instead of " + defaultNum
-                        + ") since this machine has limited memory (" + memTotal + ")");
+                        + ") since this machine has limited memory (" + memTotal + ") or this is a JBoss test");
       return lowMemNum;
     }
 
