@@ -33,18 +33,22 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
     super(installation);
   }
 
+  @Override
   protected String cargoServerKey() {
     return "weblogic10x";
   }
 
+  @Override
   protected InstalledLocalContainer container(LocalConfiguration config, AppServerParameters params) {
     return new TCWebLogic10xInstalledLocalContainer(config);
   }
 
+  @Override
   protected void setExtraClasspath(AppServerParameters params) {
     container().setExtraClasspath(params.classpath().split(String.valueOf(File.pathSeparatorChar)));
   }
 
+  @Override
   protected void setConfigProperties(LocalConfiguration config) throws Exception {
     // config.setProperty(WebLogicPropertySet.DOMAIN, "domain");
   }
@@ -60,6 +64,7 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
       WeblogicAppServerBase.doStop(getConfiguration());
     }
 
+    @Override
     protected void setState(State state) {
       if (state.equals(State.STARTING)) {
         adjustConfig();
@@ -69,11 +74,13 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
     }
 
     private void adjustConfig() {
+      String insert = "";
+      insert += "    <native-io-enabled>false</native-io-enabled>\n";
+      insert += "    <socket-reader-timeout-min-millis>1000</socket-reader-timeout-min-millis>\n";
+      insert += "    <socket-reader-timeout-max-millis>1000</socket-reader-timeout-max-millis>\n";
+
       ReplaceLine.Token[] tokens = new ReplaceLine.Token[1];
-      tokens[0] = new ReplaceLine.Token(
-                                        5,
-                                        "(NativeIOEnabled=\"false\")",
-                                        "NativeIOEnabled=\"false\" SocketReaderTimeoutMaxMillis=\"1000\" SocketReaderTimeoutMinMillis=\"1000\" StdoutDebugEnabled=\"true\" StdoutSeverityLevel=\"64\"");
+      tokens[0] = new ReplaceLine.Token(28, "    <listen-port>", insert + "    <listen-port>");
 
       try {
         ReplaceLine.parseFile(tokens, new File(getConfiguration().getHome(), "/config/config.xml"));
@@ -93,9 +100,9 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
       if (Os.isLinux() || Os.isSolaris()) {
         try {
           String[] resources = new String[] { "security/SerializedSystemIni.dat" };
-          for (int i = 0; i < resources.length; i++) {
-            String resource = "linux/" + resources[i];
-            File dest = new File(getConfiguration().getHome(), resources[i]);
+          for (String resource2 : resources) {
+            String resource = "linux/" + resource2;
+            File dest = new File(getConfiguration().getHome(), resource2);
             copyResource(resource, dest);
           }
         } catch (IOException e) {
@@ -116,6 +123,7 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
       }
     }
 
+    @Override
     protected void addToClassPath(Path classpath) {
       AppServerInfo appServerInfo = TestConfigObject.getInstance().appServerInfo();
       File modulesDir = new File(this.getHome(), "modules");
