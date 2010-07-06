@@ -104,7 +104,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     if (!Vm.isIBM() && !(Os.isMac() && Vm.isJDK14())) {
       parameters.appendJvmArgs("-XX:+HeapDumpOnOutOfMemoryError");
     }
-
+    
     appId = config.appServerId();
     // glassfish fails with these options on
     if (appId != AppServerInfo.GLASSFISH) {
@@ -113,7 +113,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       parameters.appendSysProp("com.sun.management.jmxremote.ssl", false);
       parameters.appendSysProp("com.sun.management.jmxremote.port", this.jmxRemotePort);
     }
-
+    
+    parameters.appendSysProp("com.tc.session.debug.sessions", true);
     parameters.appendSysProp("rmi.registry.port", this.rmiRegistryPort);
 
     String[] params = { "tc.classloader.writeToDisk", "tc.objectmanager.dumpHierarchy", "aspectwerkz.deployment.info",
