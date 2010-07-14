@@ -47,8 +47,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -265,6 +265,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     List<CharSequence> hits = Grep
         .grep("^SEVERE: WEB0610: WebModule \\[/web1\\] failed to deploy and has been disabled$", nodeLogFile);
     if (!hits.isEmpty()) { throw new RetryException("web1"); }
+
+    throw new RetryException("ping app failed to deploy");
   }
 
   protected void waitForAppInstanceRunning(final AppServerParameters params) throws Exception {
