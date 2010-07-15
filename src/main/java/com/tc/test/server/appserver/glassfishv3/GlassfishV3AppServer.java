@@ -95,7 +95,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
 
     waitForAppInstanceRunning(params);
 
-    deployWars(process, nodeLogFile, params.wars());
+    deployWars(nodeLogFile, params.wars());
 
     waitForPing(nodeLogFile);
 
