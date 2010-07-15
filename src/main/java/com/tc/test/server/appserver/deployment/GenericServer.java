@@ -25,6 +25,13 @@ import org.xml.sax.SAXException;
 
 import com.meterware.httpunit.WebConversation;
 import com.meterware.httpunit.WebResponse;
+import com.tc.asm.ClassAdapter;
+import com.tc.asm.ClassReader;
+import com.tc.asm.ClassVisitor;
+import com.tc.asm.ClassWriter;
+import com.tc.asm.MethodAdapter;
+import com.tc.asm.MethodVisitor;
+import com.tc.asm.Opcodes;
 import com.tc.management.JMXConnectorProxy;
 import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
@@ -45,23 +52,27 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.JarOutputStream;
+import java.util.zip.ZipEntry;
 
 import javax.management.MBeanServerConnection;
 
 import junit.framework.Assert;
 
 public class GenericServer extends AbstractStoppable implements WebApplicationServer {
-  private static final Log                  LOG             = LogFactory.getLog(GenericServer.class);
-  private static final String               SERVER          = "server_";
-  private static final boolean              GC_LOGGING      = true;
-  private static final boolean              ENABLE_DEBUGGER = Boolean.getBoolean(GenericServer.class.getName()
-                                                                                 + ".ENABLE_DEBUGGER");
-  private static final ThreadLocal          dsoEnabled      = new ThreadLocal() {
-                                                              @Override
-                                                              protected Object initialValue() {
-                                                                return Boolean.TRUE;
-                                                              }
-                                                            };
+  private static final Log                  LOG                  = LogFactory.getLog(GenericServer.class);
+  private static final String               SERVER               = "server_";
+  private static final boolean              GC_LOGGING           = true;
+  private static final boolean              ENABLE_DEBUGGER      = Boolean.getBoolean(GenericServer.class.getName()
+                                                                                      + ".ENABLE_DEBUGGER");
+  private static final ThreadLocal          dsoEnabled           = new ThreadLocal() {
+                                                                   @Override
+                                                                   protected Object initialValue() {
+                                                                     return Boolean.TRUE;
+                                                                   }
+                                                                 };
+
+  private static final boolean              DEBUG_URL_CLASS_PATH = true;
 
   private final int                         jmxRemotePort;
   private final int                         rmiRegistryPort;
@@ -70,8 +81,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private final StandardAppServerParameters parameters;
   private ServerResult                      result;
   private final AppServerInstallation       installation;
-  private final Map                         proxyBuilderMap = new HashMap();
-  private ProxyBuilder                      proxyBuilder    = null;
+  private final Map                         proxyBuilderMap      = new HashMap();
+  private ProxyBuilder                      proxyBuilder         = null;
   private final File                        workingDir;
   private final String                      serverInstanceName;
   private final File                        tcConfigFile;
@@ -91,6 +102,12 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
     File bootJarFile = new File(config.normalBootJar());
 
+    if (DEBUG_URL_CLASS_PATH) {
+      if (Vm.isJDK16() && !dsoEnabled()) {
+        parameters.appendJvmArgs("-Xbootclasspath/p:" + createDebugJar());
+      }
+    }
+
     if (dsoEnabled()) {
       parameters.appendSysProp("tc.base-dir", System.getProperty(TestConfigObject.TC_BASE_DIR));
       parameters.appendSysProp("com.tc.l1.modules.repositories", System.getProperty("com.tc.l1.modules.repositories"));
@@ -104,7 +121,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     if (!Vm.isIBM() && !(Os.isMac() && Vm.isJDK14())) {
       parameters.appendJvmArgs("-XX:+HeapDumpOnOutOfMemoryError");
     }
-    
+
     appId = config.appServerId();
     // glassfish fails with these options on
     if (appId != AppServerInfo.GLASSFISH) {
@@ -113,7 +130,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       parameters.appendSysProp("com.sun.management.jmxremote.ssl", false);
       parameters.appendSysProp("com.sun.management.jmxremote.port", this.jmxRemotePort);
     }
-    
+
     parameters.appendSysProp("com.tc.session.debug.sessions", true);
     parameters.appendSysProp("rmi.registry.port", this.rmiRegistryPort);
 
@@ -163,6 +180,30 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       LOG.debug("Creating proxy for Spring test...");
       proxyBuilderMap.put(RmiServiceExporter.class, new RMIProxyBuilder());
       proxyBuilderMap.put(HttpInvokerServiceExporter.class, new HttpInvokerProxyBuilder());
+    }
+  }
+
+  private String createDebugJar() {
+    try {
+      String classFile = "sun/misc/URLClassPath$Loader.class";
+
+      ClassReader reader = new ClassReader(ClassLoader.getSystemResource(classFile).openStream());
+      ClassWriter writer = new ClassWriter(0);
+      LoaderAdapter adapter = new LoaderAdapter(writer);
+
+      reader.accept(adapter, 0);
+
+      File jar = new File(workingDir.getParentFile(), "debug-" + serverInstanceName + ".jar");
+      jar.deleteOnExit();
+
+      JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
+      out.putNextEntry(new ZipEntry(classFile));
+      out.write(writer.toByteArray());
+      out.close();
+
+      return jar.getAbsolutePath();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -429,4 +470,57 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   public File getTcConfigFile() {
     return tcConfigFile;
   }
+
+  private static class LoaderAdapter extends ClassAdapter implements Opcodes {
+
+    public LoaderAdapter(ClassVisitor cv) {
+      super(cv);
+    }
+
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+      return new LoaderMethodAdapter(super.visitMethod(access, name, desc, signature, exceptions));
+    }
+
+    @Override
+    public void visitEnd() {
+      MethodVisitor mv = super.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
+      mv.visitCode();
+      mv.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
+      mv.visitLdcInsn("\n\n************\nWARNING: DEBUG URLClasspath$Loader in use!!!\n************\n\n");
+      mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+      mv.visitInsn(RETURN);
+      mv.visitMaxs(2, 0);
+      mv.visitEnd();
+
+      super.visitEnd();
+    }
+
+    private static class LoaderMethodAdapter extends MethodAdapter implements Opcodes {
+
+      public LoaderMethodAdapter(MethodVisitor mv) {
+        super(mv);
+      }
+
+      @Override
+      public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+
+        if ((opcode == INVOKESPECIAL) && ("java/lang/IllegalArgumentException".equals(owner)) && "<init>".equals(name)
+            && ("(Ljava/lang/String;)V".equals(desc))) {
+
+          super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
+          super.visitVarInsn(ALOAD, 1);
+          super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+
+          super.visitVarInsn(ALOAD, 4);
+          super.visitMethodInsn(INVOKESPECIAL, "java/lang/IllegalArgumentException", "<init>",
+                                "(Ljava/lang/String;Ljava/lang/Throwable;)V");
+        } else {
+          super.visitMethodInsn(opcode, owner, name, desc);
+        }
+      }
+    }
+
+  }
+
 }
