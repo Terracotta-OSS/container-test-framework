@@ -49,7 +49,7 @@ import java.util.Map.Entry;
 import junit.framework.Assert;
 
 public class ServerManager {
-  private static final String EXPRESS_MODE_LOAD_CLASS      = "org.terracotta.session.TerracottaWeblogic10xSessionFilter";
+  private static final String EXPRESS_MODE_LOAD_CLASS      = "org.terracotta.session.BootStrap";
 
   private static final String EXPRESS_RUNTIME_LOAD_CLASS   = "org.terracotta.express.Client";
 
@@ -122,7 +122,7 @@ public class ServerManager {
     jvmArgs = extraJvmArgs;
     installation = AppServerUtil.createAppServerInstallation(factory, installDir, sandbox);
 
-    useTimGet = config.isExpressMode() ? false : determineSessionMethod();
+    useTimGet = config.isExpressModeForAppserver() ? false : determineSessionMethod();
 
     if (DEBUG_MODE) {
       serverTcConfig.setDsoPort(9510);
@@ -214,7 +214,7 @@ public class ServerManager {
   }
 
   public WebApplicationServer makeWebApplicationServer(final TcConfigBuilder tcConfigBuilder) throws Exception {
-    return makeWebApplicationServer(tcConfigBuilder, config.isExpressMode());
+    return makeWebApplicationServer(tcConfigBuilder, config.isExpressModeForAppserver());
   }
 
   public WebApplicationServer makeWebApplicationServer(final TcConfigBuilder tcConfigBuilder, boolean addExpress)
@@ -235,7 +235,7 @@ public class ServerManager {
     GenericServer.setDsoEnabled(false);
     int i = ServerManager.appServerIndex++;
     WebApplicationServer appServer = new GenericServer(config, factory, installation, null, i, tempDir);
-    if (config.isExpressMode()) {
+    if (config.isExpressModeForAppserver()) {
       addExpressModeParams(appServer.getServerParameters());
     }
     addServerToStop(appServer);
@@ -257,7 +257,7 @@ public class ServerManager {
     aCopy.setDsoPort(getServerTcConfig().getDsoPort());
     aCopy.setJmxPort(getServerTcConfig().getJmxPort());
 
-    if (!config.isExpressMode()) {
+    if (!config.isExpressModeForAppserver()) {
       prepareCustomMode(aCopy);
     }
 
@@ -403,7 +403,7 @@ public class ServerManager {
   }
 
   public DeploymentBuilder makeDeploymentBuilder(final String warFileName) {
-    return makeDeploymentBuilder(warFileName, config.isExpressMode());
+    return makeDeploymentBuilder(warFileName, config.isExpressModeForAppserver());
   }
 
   public DeploymentBuilder makeDeploymentBuilder(final String warFileName, boolean addExpressConfig) {
@@ -553,7 +553,7 @@ public class ServerManager {
   private Map<String, String> getConfigAttributes() {
     Map<String, String> attrs = new HashMap();
     attrs.put("tcConfigUrl", getTcConfigUrl());
-    System.out.println("XXX: sessionLocking:" + isSessionLocking);
+    System.out.println("XXX: sessionLocking: " + isSessionLocking);
     System.out.println("XXX: synchronousWrite: " + isSynchronousWrite);
     if (isSessionLocking != null) {
       attrs.put("sessionLocking", isSessionLocking.toString());
@@ -578,7 +578,7 @@ public class ServerManager {
     try {
       expressJar = new File(Util.jarFor(Class.forName(className)));
     } catch (ClassNotFoundException e1) {
-      throw new RuntimeException(e1);
+      throw new RuntimeException("Couldn't load class " + className + " to look up the jar file" , e1);
     }
     File sandBoxArtifact = new File(this.tempDir, expressJar.getName());
 

@@ -60,6 +60,7 @@ import javax.management.MBeanServerConnection;
 import junit.framework.Assert;
 
 public class GenericServer extends AbstractStoppable implements WebApplicationServer {
+  private static final String               ENABLED_DSO_PROPERTY = "tc.tests.info.appserver.dso.enabled";
   private static final Log                  LOG                  = LogFactory.getLog(GenericServer.class);
   private static final String               SERVER               = "server_";
   private static final boolean              GC_LOGGING           = true;
@@ -68,7 +69,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private static final ThreadLocal          dsoEnabled           = new ThreadLocal() {
                                                                    @Override
                                                                    protected Object initialValue() {
-                                                                     return Boolean.TRUE;
+                                                                     return Boolean.valueOf(System
+                                                                         .getProperty(ENABLED_DSO_PROPERTY, "true"));
                                                                    }
                                                                  };
 
@@ -107,6 +109,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
         parameters.appendJvmArgs("-Xbootclasspath/p:" + createDebugJar());
       }
     }
+
+    if (!Boolean.getBoolean("tc.tests.info.appserver.dso"))
 
     if (dsoEnabled()) {
       parameters.appendSysProp("tc.base-dir", System.getProperty(TestConfigObject.TC_BASE_DIR));

@@ -39,7 +39,7 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   public AbstractDeploymentTestCase() {
-    isExpressMode = TestConfigObject.getInstance().isExpressMode();
+    isExpressMode = TestConfigObject.getInstance().isExpressModeForAppserver();
   }
 
   public boolean shouldDisable() {

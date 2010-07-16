@@ -45,7 +45,7 @@ public class ServerTestSetup extends TestSetup {
   protected void setUp() throws Exception {
     if (shouldDisable()) return;
     super.setUp();
-    if (TestConfigObject.getInstance().isExpressMode()) {
+    if (TestConfigObject.getInstance().isExpressModeForAppserver()) {
       Banner.infoBanner("Running appserver in express mode. DSO is disabled");
       GenericServer.setDsoEnabled(false);
     }
