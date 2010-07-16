@@ -110,8 +110,6 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       }
     }
 
-    if (!Boolean.getBoolean("tc.tests.info.appserver.dso"))
-
     if (dsoEnabled()) {
       parameters.appendSysProp("tc.base-dir", System.getProperty(TestConfigObject.TC_BASE_DIR));
       parameters.appendSysProp("com.tc.l1.modules.repositories", System.getProperty("com.tc.l1.modules.repositories"));
