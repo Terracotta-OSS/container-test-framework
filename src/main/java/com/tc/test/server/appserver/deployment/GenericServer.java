@@ -69,7 +69,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private static final ThreadLocal          dsoEnabled           = new ThreadLocal() {
                                                                    @Override
                                                                    protected Object initialValue() {
-                                                                     return Boolean.valueOf(System
+                                                                     return Boolean.valueOf(TestConfigObject.getInstance()
                                                                          .getProperty(ENABLED_DSO_PROPERTY, "true"));
                                                                    }
                                                                  };
@@ -118,6 +118,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
       parameters.appendJvmArgs("-Xbootclasspath/p:" + bootJarFile.getAbsolutePath());
       parameters.appendSysProp("tc.classpath", writeTerracottaClassPathFile());
+    } else {
+      System.out.println("XXX: DSO is disabled, not adding bootjar");
     }
 
     if (!Vm.isIBM() && !(Os.isMac() && Vm.isJDK14())) {
