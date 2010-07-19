@@ -25,14 +25,6 @@ import org.xml.sax.SAXException;
 
 import com.meterware.httpunit.WebConversation;
 import com.meterware.httpunit.WebResponse;
-import com.tc.asm.ClassAdapter;
-import com.tc.asm.ClassReader;
-import com.tc.asm.ClassVisitor;
-import com.tc.asm.ClassWriter;
-import com.tc.asm.MethodAdapter;
-import com.tc.asm.MethodVisitor;
-import com.tc.asm.Opcodes;
-import com.tc.asm.commons.AdviceAdapter;
 import com.tc.management.JMXConnectorProxy;
 import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
@@ -51,12 +43,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.JarOutputStream;
-import java.util.zip.ZipEntry;
 
 import javax.management.MBeanServerConnection;
 
@@ -72,12 +60,11 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private static final ThreadLocal          dsoEnabled           = new ThreadLocal() {
                                                                    @Override
                                                                    protected Object initialValue() {
-                                                                     return Boolean.valueOf(TestConfigObject.getInstance()
+                                                                     return Boolean.valueOf(TestConfigObject
+                                                                         .getInstance()
                                                                          .getProperty(ENABLED_DSO_PROPERTY, "true"));
                                                                    }
                                                                  };
-
-  private static final boolean              DEBUG_URL_CLASS_PATH = true;
 
   private final int                         jmxRemotePort;
   private final int                         rmiRegistryPort;
@@ -106,12 +93,6 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     this.tcConfigFile = tcConfigFile;
 
     File bootJarFile = new File(config.normalBootJar());
-
-    if (DEBUG_URL_CLASS_PATH) {
-      if (Vm.isJDK16() && !dsoEnabled() && config.appServerId() != AppServerInfo.WEBSPHERE) {
-        parameters.appendJvmArgs("-Xbootclasspath/p:" + createDebugJar());
-      }
-    }
 
     if (dsoEnabled()) {
       parameters.appendSysProp("tc.base-dir", System.getProperty(TestConfigObject.TC_BASE_DIR));
@@ -187,43 +168,6 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       LOG.debug("Creating proxy for Spring test...");
       proxyBuilderMap.put(RmiServiceExporter.class, new RMIProxyBuilder());
       proxyBuilderMap.put(HttpInvokerServiceExporter.class, new HttpInvokerProxyBuilder());
-    }
-  }
-
-  private String createDebugJar() {
-    try {
-      String classFile1 = "sun/misc/URLClassPath$Loader.class";
-
-      ClassReader reader1 = new ClassReader(ClassLoader.getSystemResource(classFile1).openStream());
-      ClassWriter writer1 = new ClassWriter(0);
-      LoaderAdapter adapter1 = new LoaderAdapter(writer1);
-      reader1.accept(adapter1, 0);
-
-      String classFile2 = "java/net/URL.class";
-      URL url = null;
-      // compensate for the fact that URL is already instrumented (via dso boot jar)
-      Enumeration<URL> systemResources = ClassLoader.getSystemResources(classFile2);
-      while (systemResources.hasMoreElements()) {
-        url = systemResources.nextElement();
-      }
-      ClassReader reader2 = new ClassReader(url.openStream());
-      ClassWriter writer2 = new ClassWriter(0);
-      URLAdapter adapter2 = new URLAdapter(writer2);
-      reader2.accept(adapter2, 0);
-
-      File jar = new File(workingDir.getParentFile(), "debug-" + serverInstanceName + ".jar");
-      jar.deleteOnExit();
-
-      JarOutputStream out = new JarOutputStream(new FileOutputStream(jar));
-      out.putNextEntry(new ZipEntry(classFile1));
-      out.write(writer1.toByteArray());
-      out.putNextEntry(new ZipEntry(classFile2));
-      out.write(writer2.toByteArray());
-      out.close();
-
-      return jar.getAbsolutePath();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -489,134 +433,6 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
   public File getTcConfigFile() {
     return tcConfigFile;
-  }
-
-  private static class URLAdapter extends ClassAdapter implements Opcodes {
-
-    public URLAdapter(ClassVisitor cv) {
-      super(cv);
-    }
-
-    @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-      MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-
-      if ("<init>".equals(name) && "(Ljava/net/URL;Ljava/lang/String;Ljava/net/URLStreamHandler;)V".equals(desc)) {
-        //
-        return new CstrAdapter(mv, access, name, desc);
-      }
-
-      if ("<clinit>".equals(name)) { return new ClinitAdapter(mv); }
-
-      return mv;
-    }
-
-    private static class ClinitAdapter extends MethodAdapter implements Opcodes {
-
-      public ClinitAdapter(MethodVisitor mv) {
-        super(mv);
-      }
-
-      @Override
-      public void visitCode() {
-        super.visitCode();
-
-        mv.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-        mv.visitLdcInsn("\n\n************\nWARNING: DEBUG java.net.URL in use!!!\n************\n\n");
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-      }
-
-    }
-
-    private static class CstrAdapter extends AdviceAdapter implements Opcodes {
-
-      public CstrAdapter(MethodVisitor mv, int access, String name, String desc) {
-        super(mv, access, name, desc);
-      }
-
-      @Override
-      protected void onMethodEnter() {
-        super.visitLdcInsn(new Integer(-2147483648));
-        super.visitVarInsn(ISTORE, 6);
-      }
-
-      @Override
-      public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-        if ((opcode == INVOKEVIRTUAL) && (owner.equals("java/lang/Exception")) && (name.equals("getMessage"))) {
-          super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-          super.visitVarInsn(ILOAD, 8);
-          super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V");
-          super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-          super.visitVarInsn(ILOAD, 6);
-          super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V");
-          super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-          super.visitVarInsn(ALOAD, 1);
-          super.visitMethodInsn(INVOKEVIRTUAL, "java/net/URL", "toExternalForm", "()Ljava/lang/String;");
-          super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-          super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-          super.visitVarInsn(ALOAD, 2);
-          super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-          super.visitVarInsn(ALOAD, 12);
-          super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V");
-        }
-
-        super.visitMethodInsn(opcode, owner, name, desc);
-      }
-
-    }
-
-  }
-
-  private static class LoaderAdapter extends ClassAdapter implements Opcodes {
-
-    public LoaderAdapter(ClassVisitor cv) {
-      super(cv);
-    }
-
-    @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-      return new LoaderMethodAdapter(super.visitMethod(access, name, desc, signature, exceptions));
-    }
-
-    @Override
-    public void visitEnd() {
-      MethodVisitor mv = super.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
-      mv.visitCode();
-      mv.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-      mv.visitLdcInsn("\n\n************\nWARNING: DEBUG URLClasspath$Loader in use!!!\n************\n\n");
-      mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-      mv.visitInsn(RETURN);
-      mv.visitMaxs(2, 0);
-      mv.visitEnd();
-
-      super.visitEnd();
-    }
-
-    private static class LoaderMethodAdapter extends MethodAdapter implements Opcodes {
-
-      public LoaderMethodAdapter(MethodVisitor mv) {
-        super(mv);
-      }
-
-      @Override
-      public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-
-        if ((opcode == INVOKESPECIAL) && ("java/lang/IllegalArgumentException".equals(owner)) && "<init>".equals(name)
-            && ("(Ljava/lang/String;)V".equals(desc))) {
-
-          super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-          super.visitVarInsn(ALOAD, 1);
-          super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-
-          super.visitVarInsn(ALOAD, 4);
-          super.visitMethodInsn(INVOKESPECIAL, "java/lang/IllegalArgumentException", "<init>",
-                                "(Ljava/lang/String;Ljava/lang/Throwable;)V");
-        } else {
-          super.visitMethodInsn(opcode, owner, name, desc);
-        }
-      }
-    }
-
   }
 
 }
