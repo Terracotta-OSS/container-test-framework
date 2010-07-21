@@ -14,20 +14,20 @@
   <version>1.1.1-SNAPSHOT</version>
 
   <properties>
-    <tc.version>3.3.1-SNAPSHOT</tc.version>
+    <terracotta.core.version>3.3.1-SNAPSHOT</terracotta.core.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.terracotta</groupId>
       <artifactId>terracotta</artifactId>
-      <version>${tc.version}</version>
+      <version>${terracotta.core.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.terracotta.api</groupId>
       <artifactId>test-api</artifactId>
-      <version>${tc.version}</version>
+      <version>${terracotta.core.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
