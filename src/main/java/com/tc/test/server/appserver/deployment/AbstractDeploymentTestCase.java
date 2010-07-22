@@ -42,6 +42,11 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
     isExpressMode = TestConfigObject.getInstance().isExpressModeForAppserver();
   }
 
+  @Override
+  protected boolean isContainerTest() {
+    return true;
+  }
+
   public boolean shouldDisable() {
     if (LowMemWorkaround.lessThan2Gb()) { return true; }
 
