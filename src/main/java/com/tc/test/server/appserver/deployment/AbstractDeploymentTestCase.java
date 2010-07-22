@@ -11,6 +11,7 @@ import com.tc.test.AppServerInfo;
 import com.tc.test.TCTestCase;
 import com.tc.test.TestConfigObject;
 import com.tc.test.server.appserver.load.LowMemWorkaround;
+import com.tc.text.Banner;
 import com.tc.util.TcConfigBuilder;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   public boolean shouldDisable() {
     if (LowMemWorkaround.lessThan2Gb()) { return true; }
 
-    return isAllDisabled() || shouldDisableForJavaVersion() || shouldDisableForVariants()
+    return shouldBeSkipped() || isAllDisabled() || shouldDisableForJavaVersion() || shouldDisableForVariants()
            || (isExpressMode() && !canRunExpressMode());
   }
 
@@ -76,6 +77,9 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
 
   @Override
   public void runBare() throws Throwable {
+    if (this.shouldBeSkipped()) {
+      Banner.warnBanner("Test " + this.getClass().getName() + " is skipped because it's not configured to run with an appserver");
+    }
     if (shouldDisable()) { return; }
     super.runBare();
   }
