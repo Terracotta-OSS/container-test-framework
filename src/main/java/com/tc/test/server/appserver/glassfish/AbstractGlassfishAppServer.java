@@ -393,7 +393,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     Result result = Exec.execute((String[]) cmd.toArray(new String[] {}));
 
     if (result.getExitCode() == 0) {
-      System.err.println("Deployed war file successfully.");
+      System.err.println("Deployed war file successfully (supposedly).");
+      System.err.println(result);
       return;
     }
 
