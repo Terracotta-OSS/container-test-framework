@@ -89,8 +89,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
   protected synchronized File getPasswdFile() throws IOException {
     if (passwdFile == null) {
-      passwdFile = File.createTempFile("passwd", "");
-      passwdFile.deleteOnExit();
+      passwdFile = new File(instanceDir.getParentFile(), "passwd" + System.currentTimeMillis() + ".txt");
 
       FileOutputStream fos = null;
       try {
