@@ -95,9 +95,9 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       try {
         fos = new FileOutputStream(passwdFile);
         fos.write(("AS_ADMIN_ADMINPASSWORD=" + PASSWD).getBytes());
-        fos.write("\n".getBytes());
+        fos.write(System.getProperty("line.separator").getBytes());
         fos.write(("AS_ADMIN_MASTERPASSWORD=" + PASSWD).getBytes());
-        fos.write("\n".getBytes());
+        fos.write(System.getProperty("line.separator").getBytes());
       } finally {
         if (fos != null) {
           try {
