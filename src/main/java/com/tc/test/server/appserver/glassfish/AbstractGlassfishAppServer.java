@@ -40,6 +40,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,20 +90,15 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       passwdFile = File.createTempFile("passwd", "");
       passwdFile.deleteOnExit();
 
-      FileOutputStream fos = null;
+      PrintWriter out = null;
       try {
-        fos = new FileOutputStream(passwdFile);
-        fos.write(("AS_ADMIN_ADMINPASSWORD=" + PASSWD).getBytes());
-        fos.write("\n".getBytes());
-        fos.write(("AS_ADMIN_MASTERPASSWORD=" + PASSWD).getBytes());
-        fos.write("\n".getBytes());
+        out = new PrintWriter(new FileOutputStream(passwdFile));
+        out.println("AS_ADMIN_PASSWORD=" + PASSWD);
+        out.println("AS_ADMIN_ADMINPASSWORD=" + PASSWD);
+        out.println("AS_ADMIN_MASTERPASSWORD=" + PASSWD);
       } finally {
-        if (fos != null) {
-          try {
-            fos.close();
-          } catch (IOException ioe) {
-            // ignore
-          }
+        if (out != null) {
+          out.close();
         }
       }
     }
