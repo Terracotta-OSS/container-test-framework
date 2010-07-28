@@ -48,8 +48,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -75,11 +75,14 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
   public static final long    START_STOP_TIMEOUT = 1000 * 300;
   protected final PortChooser pc                 = new PortChooser();
-  protected final int         httpPort           = pc.chooseRandomPort();
-  protected final int         adminPort          = pc.chooseRandomPort();
   protected File              passwdFile;
   protected Thread            runner;
   protected File              instanceDir;
+
+  protected int               httpPort;
+  protected int               adminPort;
+
+  private Process             process;
 
   public AbstractGlassfishAppServer(final GlassfishAppServerInstallation installation) {
     super(installation);
@@ -87,8 +90,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
   protected synchronized File getPasswdFile() throws IOException {
     if (passwdFile == null) {
-      passwdFile = File.createTempFile("passwd", "");
-      passwdFile.deleteOnExit();
+      passwdFile = new File(instanceDir.getParentFile(), "passwd" + System.currentTimeMillis() + ".txt");
 
       PrintWriter out = null;
       try {
@@ -166,6 +168,15 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
         return start0(new ParamsWithRetry(params, i));
       } catch (RetryException re) {
         Banner.warnBanner("Re-trying server startup (" + i + ") " + re.getMessage());
+
+        if (process != null) {
+          try {
+            process.destroy();
+          } catch (Throwable t) {
+            t.printStackTrace();
+          }
+        }
+
         continue;
       }
     }
@@ -174,6 +185,9 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   }
 
   protected ServerResult start0(final AppServerParameters params) throws Exception {
+    httpPort = pc.chooseRandomPort();
+    adminPort = pc.chooseRandomPort();
+
     instanceDir = createInstance(params);
 
     instanceDir.delete(); // createDomain will fail if directory already exists
@@ -188,7 +202,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     final String cmd[] = getStartupCommand(params);
     final File nodeLogFile = new File(instanceDir.getParent(), instanceDir.getName() + ".log");
-    final Process process = Runtime.getRuntime().exec(cmd, null, instanceDir);
+    process = Runtime.getRuntime().exec(cmd, null, instanceDir);
 
     runner = new Thread("runner for " + params.instanceName()) {
       @Override
@@ -226,7 +240,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     waitForAppInstanceRunning(params);
 
-    deployWars(process, nodeLogFile, params.wars());
+    deployWars(nodeLogFile, params.wars());
 
     waitForPing(nodeLogFile);
 
@@ -261,6 +275,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     List<CharSequence> hits = Grep
         .grep("^SEVERE: WEB0610: WebModule \\[/web1\\] failed to deploy and has been disabled$", nodeLogFile);
     if (!hits.isEmpty()) { throw new RetryException("web1"); }
+
+    throw new RetryException("ping app failed to deploy");
   }
 
   protected void waitForAppInstanceRunning(final AppServerParameters params) throws Exception {
@@ -334,17 +350,17 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     }
   }
 
-  protected void deployWars(final Process process, final File nodeLogFile, final Map wars) throws Exception {
+  protected void deployWars(final File nodeLogFile, final Map wars) throws Exception {
     for (Iterator iter = wars.entrySet().iterator(); iter.hasNext();) {
       Map.Entry entry = (Entry) iter.next();
       String warName = (String) entry.getKey();
       File warFile = (File) entry.getValue();
-      deployWar(warName, warFile, process, nodeLogFile);
+      deployWar(warName, warFile, nodeLogFile);
     }
 
     // deploy the ping app so we can test to see
     // if wars are ready
-    deployWar(PINGWAR, createPingWarFile(PINGWAR + ".war"), process, nodeLogFile);
+    deployWar(PINGWAR, createPingWarFile(PINGWAR + ".war"), nodeLogFile);
   }
 
   private File createPingWarFile(final String warName) throws Exception {
@@ -353,8 +369,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     return builder.makeDeployment().getFileSystemPath().getFile();
   }
 
-  private void deployWar(final String warName, final File warFile, final Process process, final File nodeLogFile)
-      throws IOException, Exception {
+  private void deployWar(final String warName, final File warFile, final File nodeLogFile) throws IOException,
+      Exception {
     System.err.println("Deploying war [" + warName + "] on " + instanceDir.getName());
 
     List cmd = new ArrayList();
@@ -372,12 +388,15 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     Result result = Exec.execute((String[]) cmd.toArray(new String[] {}));
 
     if (result.getExitCode() == 0) {
-      System.err.println("Deployed war file successfully.");
+      System.err.println("Deployed war file successfully (supposedly).");
+      System.err.println(result);
       return;
     }
 
     // deploy failed. Stop the process and see if it the known "web1" problem
     process.destroy();
+    process = null;
+
     ThreadUtil.reallySleep(3000);
     List<CharSequence> hits = Grep
         .grep("^SEVERE: WEB0610: WebModule \\[/web1\\] failed to deploy and has been disabled$", nodeLogFile);
