@@ -14,6 +14,7 @@ public class ValveDefinition {
 
   public ValveDefinition(String className) {
     this.className = className;
+    setAttribute("className", className);
   }
 
   public String getClassName() {
@@ -22,6 +23,10 @@ public class ValveDefinition {
 
   public void setAttribute(String name, String value) {
     attributes.put(name, value);
+  }
+
+  public Map<String, String> getAttributes() {
+    return attributes;
   }
 
   @Override
