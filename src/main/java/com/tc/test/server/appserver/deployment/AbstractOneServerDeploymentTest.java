@@ -83,6 +83,7 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
     private WebApplicationServer createServer(Deployment deployment) throws Exception {
       WebApplicationServer server = getServerManager().makeWebApplicationServer(getTcConfigBuilder());
       server.addWarDeployment(deployment, context);
+      configureServer(server);
       configureServerParamers(server.getServerParameters());
       if (start) {
         server.start();
@@ -106,6 +107,11 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
     protected void configureServerParamers(StandardAppServerParameters params) {
       // override this method to modify jvm args for app server
     }
+
+    protected void configureServer(WebApplicationServer server) {
+      //
+    }
+
   }
 
 }
