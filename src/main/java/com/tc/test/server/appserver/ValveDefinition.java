@@ -35,7 +35,7 @@ public class ValveDefinition {
   }
 
   public String toXml() {
-    String xml = "<Valve className=\"" + getClassName() + "\"";
+    String xml = "<Valve";
     for (Entry<String, String> attr : attributes.entrySet()) {
       xml += " " + attr.getKey() + "=\"" + attr.getValue() + "\"";
     }

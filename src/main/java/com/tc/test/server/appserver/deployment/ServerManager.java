@@ -43,8 +43,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import junit.framework.Assert;
 
@@ -578,7 +578,7 @@ public class ServerManager {
     try {
       expressJar = new File(Util.jarFor(Class.forName(className)));
     } catch (ClassNotFoundException e1) {
-      throw new RuntimeException("Couldn't load class " + className + " to look up the jar file" , e1);
+      throw new RuntimeException("Couldn't load class " + className + " to look up the jar file", e1);
     }
     File sandBoxArtifact = new File(this.tempDir, expressJar.getName());
 
@@ -621,7 +621,7 @@ public class ServerManager {
     File tmp = new File(this.sandbox, "context.xml");
     String xml = "";
     xml += "<Context>\n";
-    xml += "  " + makeValveDef().toString() + "\n";
+    xml += "  " + makeValveDef().toXml() + "\n";
     xml += "</Context>\n";
 
     FileOutputStream out = null;
