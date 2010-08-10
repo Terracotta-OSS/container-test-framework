@@ -9,11 +9,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.cargo.container.deployable.WAR;
-import org.codehaus.cargo.container.property.RemotePropertySet;
-import org.codehaus.cargo.container.tomcat.Tomcat5xRemoteContainer;
-import org.codehaus.cargo.container.tomcat.Tomcat5xRemoteDeployer;
-import org.codehaus.cargo.container.tomcat.TomcatPropertySet;
-import org.codehaus.cargo.container.tomcat.TomcatRuntimeConfiguration;
 import org.codehaus.cargo.util.log.SimpleLogger;
 import org.springframework.remoting.RemoteLookupFailureException;
 import org.springframework.remoting.httpinvoker.CommonsHttpInvokerRequestExecutor;
@@ -47,8 +42,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.management.MBeanServerConnection;
-
-import junit.framework.Assert;
 
 public class GenericServer extends AbstractStoppable implements WebApplicationServer {
   private static final String               ENABLED_DSO_PROPERTY = "tc.tests.info.appserver.dso.enabled";
@@ -339,21 +332,10 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
     wc.setExceptionsThrownOnErrorStatus(false);
     WebResponse response = wc.getResponse(fullURL);
-    Assert.assertEquals("Server error:\n" + response.getText(), 200, response.getResponseCode());
+    if (response.getResponseCode() != 200) { throw new RuntimeException("Response code is not 200: <![CDATA[" + response.getText()
+                                                                        + "]]>"); }
     LOG.debug("Got page: " + fullURL);
     return response;
-  }
-
-  public void redeployWar(final Deployment warDeployment, final String context) {
-    getRemoteDeployer().redeploy(makeWar(context, warDeployment.getFileSystemPath()));
-  }
-
-  public void deployWar(final Deployment warDeployment, final String context) {
-    getRemoteDeployer().deploy(makeWar(context, warDeployment.getFileSystemPath()));
-  }
-
-  public void undeployWar(final Deployment warDeployment, final String context) {
-    getRemoteDeployer().undeploy(makeWar(context, warDeployment.getFileSystemPath()));
   }
 
   // TODO - CARGO specific code
@@ -363,20 +345,6 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     war.setContext(warContext);
     war.setLogger(new SimpleLogger());
     return war;
-  }
-
-  // TODO - Tomcat specific code
-
-  private Tomcat5xRemoteDeployer getRemoteDeployer() {
-    TomcatRuntimeConfiguration runtimeConfiguration = new TomcatRuntimeConfiguration();
-    runtimeConfiguration.setProperty(RemotePropertySet.USERNAME, "admin");
-    runtimeConfiguration.setProperty(RemotePropertySet.PASSWORD, "");
-    runtimeConfiguration.setProperty(TomcatPropertySet.MANAGER_URL, "http://localhost:" + result.serverPort()
-                                                                    + "/manager");
-
-    Tomcat5xRemoteContainer remoteContainer = new Tomcat5xRemoteContainer(runtimeConfiguration);
-    Tomcat5xRemoteDeployer deployer = new Tomcat5xRemoteDeployer(remoteContainer);
-    return deployer;
   }
 
   // end tomcat specific code

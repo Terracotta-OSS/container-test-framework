@@ -27,13 +27,13 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public abstract class AbstractDeploymentTestCase extends TCTestCase {
-  protected Log         logger              = LogFactory.getLog(getClass());
+  protected Log                         logger                = LogFactory.getLog(getClass());
 
-  private ServerManager serverManager;
+  private ServerManager                 serverManager;
 
-  private final Map     disabledVariants    = new HashMap();
-  private final List    disabledJavaVersion = new ArrayList();
-  private final boolean isExpressMode;
+  private final Map                     disabledVariants      = new HashMap();
+  private final List                    disabledJavaVersion   = new ArrayList();
+  private final boolean                 isExpressMode;
 
   public static Test suite() {
     return new ErrorTestSetup(new TestSuite(AbstractDeploymentTestCase.class));
@@ -78,7 +78,8 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   @Override
   public void runBare() throws Throwable {
     if (this.shouldBeSkipped()) {
-      Banner.warnBanner("Test " + this.getClass().getName() + " is skipped because it's not configured to run with an appserver");
+      Banner.warnBanner("Test " + this.getClass().getName()
+                        + " is skipped because it's not configured to run with an appserver");
     }
     if (shouldDisable()) { return; }
     super.runBare();

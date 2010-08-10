@@ -4,6 +4,7 @@
 package com.tc.test.server.appserver.tomcat;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.codehaus.cargo.container.InstalledLocalContainer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,6 +17,7 @@ import com.tc.util.ReplaceLine;
 import com.tc.util.runtime.Os;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,6 +38,7 @@ public class TomcatStartupActions {
   public static void modifyConfig(AppServerParameters params, InstalledLocalContainer container, int catalinaPropsLine) {
     try {
       modifyConfig0(params, container, catalinaPropsLine);
+      configureManager(params, container, catalinaPropsLine);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -91,6 +94,21 @@ public class TomcatStartupActions {
       }
     } catch (IOException ioe) {
       throw new RuntimeException(ioe);
+    }
+  }
+
+  private static void configureManager(AppServerParameters params, InstalledLocalContainer container,
+                                       int catalinaPropsLine) throws Exception {
+    File managerApp = new File(container.getHome(), "webapps/manager");
+    String managerXml = "<Context path='/manager' debug='0' privileged='true' docBase='" + managerApp.getAbsolutePath()
+                        + "'></Context>";
+    File managerContextFile = new File(container.getConfiguration().getHome(), "/conf/Catalina/localhost/manager.xml");
+    managerContextFile.getParentFile().mkdirs();
+    FileOutputStream out = new FileOutputStream(managerContextFile);
+    try {
+      IOUtils.write(managerXml, out);
+    } finally {
+      IOUtils.closeQuietly(out);
     }
   }
 }

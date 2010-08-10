@@ -10,6 +10,8 @@ import org.apache.commons.logging.LogFactory;
 import com.tc.test.server.appserver.StandardAppServerParameters;
 import com.tc.util.TcConfigBuilder;
 
+import java.util.Map;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -35,17 +37,18 @@ public abstract class AbstractTwoServerDeploymentTest extends AbstractDeployment
   protected boolean shouldKillAppServersEachRun() {
     return false;
   }
+  
 
   private static abstract class TwoServerTestSetupBase extends ServerTestSetup {
-    private final Log              logger = LogFactory.getLog(getClass());
+    private final Log                     logger                = LogFactory.getLog(getClass());
 
-    private final Class            testClass;
-    private final String           context0;
-    private final String           context1;
-    private final TcConfigBuilder  tcConfigBuilder;
+    private final Class                   testClass;
+    private final String                  context0;
+    private final String                  context1;
+    private final TcConfigBuilder         tcConfigBuilder;
 
-    protected WebApplicationServer server0;
-    protected WebApplicationServer server1;
+    protected WebApplicationServer        server0;
+    protected WebApplicationServer        server1;
 
     protected TwoServerTestSetupBase(Class testClass, TcConfigBuilder configBuilder, String context0, String context1) {
       super(testClass);
@@ -55,6 +58,10 @@ public abstract class AbstractTwoServerDeploymentTest extends AbstractDeployment
       this.tcConfigBuilder = configBuilder;
     }
 
+    protected boolean autostartServers() {
+      return true;
+    }
+    
     @Override
     protected void setUp() throws Exception {
       if (shouldDisable()) return;
@@ -81,6 +88,12 @@ public abstract class AbstractTwoServerDeploymentTest extends AbstractDeployment
           server1 = createServer(deployment0, context0);
         }
 
+        // should have done all deployments, starting
+        if (autostartServers()) {
+          server0.start();
+          server1.start();
+        }
+        
         TestSuite suite = (TestSuite) getTest();
         for (int i = 0; i < suite.testCount(); i++) {
           Test t = suite.testAt(i);
@@ -102,10 +115,9 @@ public abstract class AbstractTwoServerDeploymentTest extends AbstractDeployment
 
     private WebApplicationServer createServer(Deployment deployment, String context) throws Exception {
       WebApplicationServer server = getServerManager().makeWebApplicationServer(tcConfigBuilder);
+      configureServer(server);
       configureServerParamers(server.getServerParameters());
       server.addWarDeployment(deployment, context);
-      server.start();
-
       return server;
     }
 
@@ -122,12 +134,23 @@ public abstract class AbstractTwoServerDeploymentTest extends AbstractDeployment
      */
     protected abstract void configureWar(int server, DeploymentBuilder builder);
 
+    protected void addExtraDeployment(Map<String, Deployment> extraDeployments) throws Exception {
+      // override this to add extra deployments
+    }
+
     protected void configureTcConfig(TcConfigBuilder clientConfig) {
       // override this method to modify tc-config.xml
     }
 
     protected void configureServerParamers(StandardAppServerParameters params) {
       // override this method to modify jvm args for app server
+    }
+
+    /**
+     * override this to deploy extra war or do other stuff with server
+     */
+    protected void configureServer(WebApplicationServer server) {
+      // override this to deploy extra war or do other stuff with server
     }
   }
 
