@@ -30,6 +30,7 @@ import com.tc.test.server.appserver.AppServerInstallation;
 import com.tc.test.server.appserver.StandardAppServerParameters;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.text.Banner;
+import com.tc.util.StringUtil;
 import com.tc.util.runtime.Os;
 import com.tc.util.runtime.ThreadDump;
 import com.tc.util.runtime.Vm;
@@ -332,10 +333,17 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
     wc.setExceptionsThrownOnErrorStatus(false);
     WebResponse response = wc.getResponse(fullURL);
-    if (response.getResponseCode() != 200) { throw new RuntimeException("Response code is not 200: <![CDATA[" + response.getText()
-                                                                        + "]]>"); }
+    if (response.getResponseCode() != 200) { throw new RuntimeException(htmlToText(response.getText())); }
     LOG.debug("Got page: " + fullURL);
     return response;
+  }
+
+  private String htmlToText(String html) {
+    String text = html.replaceAll("\\</?br/?>", StringUtil.LINE_SEPARATOR);
+    text = text.replaceAll("\\</?p/?>", StringUtil.LINE_SEPARATOR);
+    text = text.replaceAll("\\</h\\d+>", StringUtil.LINE_SEPARATOR);
+    text = text.replaceAll("\\<[^>]*>", "");
+    return text;
   }
 
   // TODO - CARGO specific code
