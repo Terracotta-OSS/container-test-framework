@@ -78,7 +78,11 @@ public class ServerTestSetup extends TestSetup {
   public DeploymentBuilder makeDeploymentBuilder(String warFileName) {
     return getServerManager().makeDeploymentBuilder(warFileName);
   }
-
+  
+  public DeploymentBuilder makeDeploymentBuilder(String warFileName, boolean addExpressConfig) {
+    return getServerManager().makeDeploymentBuilder(warFileName, addExpressConfig);
+  }
+  
   protected boolean isWithPersistentStore() {
     // override if you please
     return false;

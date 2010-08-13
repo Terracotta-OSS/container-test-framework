@@ -11,6 +11,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.tc.test.AppServerInfo;
+import com.tc.test.TestConfigObject;
 import com.tc.test.server.appserver.AppServerParameters;
 import com.tc.test.server.appserver.ValveDefinition;
 import com.tc.util.ReplaceLine;
@@ -99,7 +101,13 @@ public class TomcatStartupActions {
 
   private static void configureManager(AppServerParameters params, InstalledLocalContainer container,
                                        int catalinaPropsLine) throws Exception {
-    File managerApp = new File(container.getHome(), "webapps/manager");
+    AppServerInfo appServerInfo = TestConfigObject.getInstance().appServerInfo();
+    String managerPath = "server/webapps/manager";
+    if (Integer.valueOf(appServerInfo.getMajor()) >= 6) {
+      managerPath = "webapps/manager";
+    }
+    File managerApp = new File(container.getHome(), managerPath);
+    
     String managerXml = "<Context path='/manager' debug='0' privileged='true' docBase='" + managerApp.getAbsolutePath()
                         + "'></Context>";
     File managerContextFile = new File(container.getConfiguration().getHome(), "/conf/Catalina/localhost/manager.xml");
