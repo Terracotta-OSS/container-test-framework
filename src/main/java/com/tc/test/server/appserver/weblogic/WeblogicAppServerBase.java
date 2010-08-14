@@ -31,7 +31,7 @@ public abstract class WeblogicAppServerBase extends CargoAppServer {
     WARBuilder builder = new WARBuilder(CONTEXT + ".war", new File(this.sandboxDirectory(), "war"));
     builder.addServlet("shutdown", "/*", WeblogicShutdownServlet.class, new HashMap(), true);
     Deployment deployment = builder.makeDeployment();
-    params.addWar(CONTEXT, deployment.getFileSystemPath().getFile());
+    params.addDeployment(CONTEXT, deployment);
   }
 
   public static void  doStop(LocalConfiguration configuration) throws Exception {

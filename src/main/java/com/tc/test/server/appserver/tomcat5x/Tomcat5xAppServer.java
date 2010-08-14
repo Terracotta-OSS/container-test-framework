@@ -60,6 +60,7 @@ public final class Tomcat5xAppServer extends CargoAppServer {
       if (state.isStarting()) {
         int line = appServerInfo.getMinor().startsWith("0.") ? 45 : 60;
         TomcatStartupActions.modifyConfig(params, this, line);
+        TomcatStartupActions.configureManagerApp(params, this);
       }
 
       super.setState(state);

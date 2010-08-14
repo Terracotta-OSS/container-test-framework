@@ -284,7 +284,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   }
 
   public WebApplicationServer addWarDeployment(final Deployment warDeployment, final String context) {
-    parameters.addWar(context, warDeployment.getFileSystemPath().getFile());
+    parameters.addDeployment(context, warDeployment);
     return this;
   }
 

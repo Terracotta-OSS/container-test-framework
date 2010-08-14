@@ -7,5 +7,7 @@ package com.tc.test.server.appserver.deployment;
 public interface Deployment {
 
   public FileSystemPath getFileSystemPath();
+  public boolean isClustered();
+  public void setClustered(boolean clustered);
 
 }

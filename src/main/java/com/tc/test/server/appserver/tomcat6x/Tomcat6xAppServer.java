@@ -52,6 +52,7 @@ public final class Tomcat6xAppServer extends CargoAppServer {
     protected void setState(State state) {
       if (state.isStarting()) {
         TomcatStartupActions.modifyConfig(params, this, 47);
+        TomcatStartupActions.configureManagerApp(params, this);
       }
 
       super.setState(state);

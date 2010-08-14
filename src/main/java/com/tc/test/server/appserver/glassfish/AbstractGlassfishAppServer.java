@@ -607,7 +607,10 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     public Collection<String> tomcatServerJars() {
       return delegate.tomcatServerJars();
     }
-
+    
+    public Map deployments() {
+      return delegate.deployments();
+    }
   }
 
 }

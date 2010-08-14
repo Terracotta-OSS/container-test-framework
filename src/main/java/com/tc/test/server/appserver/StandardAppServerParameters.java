@@ -6,6 +6,7 @@ package com.tc.test.server.appserver;
 
 import org.apache.commons.io.IOUtils;
 
+import com.tc.test.server.appserver.deployment.Deployment;
 import com.tc.util.runtime.Os;
 
 import java.io.File;
@@ -23,7 +24,7 @@ import java.util.Properties;
  */
 public class StandardAppServerParameters implements AppServerParameters {
 
-  private final Map                         wars             = new HashMap();
+  private final Map<String, Deployment>     deployments      = new HashMap<String, Deployment>();
   private final Collection                  sars             = new ArrayList();
   private final Collection<ValveDefinition> valves           = new ArrayList();
   private final Collection<String>          tomcatServerJars = new ArrayList();
@@ -37,13 +38,8 @@ public class StandardAppServerParameters implements AppServerParameters {
     this.props = props;
   }
 
-  public void addWar(String context, File file) {
-    wars.put(context, file);
-  }
-
-  public final void addWar(File war) {
-    String name = war.getName();
-    addWar(name.substring(0, name.length() - 4), war);
+  public void addDeployment(String context, Deployment deployment) {
+    deployments.put(context, deployment);
   }
 
   public final void addSar(File sar) {
@@ -74,8 +70,16 @@ public class StandardAppServerParameters implements AppServerParameters {
     this.classpath += classpathVar + " ";
   }
 
-  public final Map wars() {
+  public final Map<String, File> wars() {
+    Map<String, File> wars = new HashMap<String, File>();
+    for (Map.Entry<String, Deployment> e : deployments.entrySet()) {
+      wars.put(e.getKey(), e.getValue().getFileSystemPath().getFile());
+    }
     return wars;
+  }
+
+  public Map<String, Deployment> deployments() {
+    return deployments;
   }
 
   public final String instanceName() {

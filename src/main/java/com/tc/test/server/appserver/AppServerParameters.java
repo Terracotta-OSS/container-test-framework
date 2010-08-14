@@ -5,7 +5,9 @@
 package com.tc.test.server.appserver;
 
 import com.tc.test.server.ServerParameters;
+import com.tc.test.server.appserver.deployment.Deployment;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
@@ -16,7 +18,9 @@ import java.util.Properties;
  */
 public interface AppServerParameters extends ServerParameters {
 
-  Map wars();
+  Map<String, File> wars();
+  
+  Map<String, Deployment> deployments();
 
   Properties properties();
 

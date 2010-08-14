@@ -7,13 +7,23 @@ package com.tc.test.server.appserver.deployment;
 public class WARDeployment implements Deployment {
 
   private final FileSystemPath warFile;
+  private boolean clustered;
 
   public WARDeployment(FileSystemPath warFile) {
     this.warFile = warFile;
+    this.clustered = true;
+  }
+  
+  public void setClustered(boolean clustered) {
+    this.clustered = clustered;
   }
 
   public FileSystemPath getFileSystemPath() {
     return warFile;
+  }
+  
+  public boolean isClustered() {
+    return clustered;
   }
 
 }

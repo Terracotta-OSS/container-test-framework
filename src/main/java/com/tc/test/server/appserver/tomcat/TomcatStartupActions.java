@@ -15,6 +15,8 @@ import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
 import com.tc.test.server.appserver.AppServerParameters;
 import com.tc.test.server.appserver.ValveDefinition;
+import com.tc.test.server.appserver.deployment.Deployment;
+import com.tc.test.server.util.Assert;
 import com.tc.util.ReplaceLine;
 import com.tc.util.runtime.Os;
 
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,7 +43,6 @@ public class TomcatStartupActions {
   public static void modifyConfig(AppServerParameters params, InstalledLocalContainer container, int catalinaPropsLine) {
     try {
       modifyConfig0(params, container, catalinaPropsLine);
-      configureManager(params, container, catalinaPropsLine);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -56,17 +58,25 @@ public class TomcatStartupActions {
         File serverXml = new File(container.getConfiguration().getHome(), "conf/server.xml");
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(serverXml);
 
+        Map<String, Deployment> deployments = params.deployments();
         NodeList contexts = doc.getElementsByTagName("Context");
         for (int i = 0, n = contexts.getLength(); i < n; i++) {
           Node context = contexts.item(i);
+          String contextPath = context.getAttributes().getNamedItem("path").getNodeValue();
+          // remove leading /
+          String appContext = contextPath.substring(1);
+          Deployment deployment = deployments.get(appContext);
+          Assert.assertNotNull(deployment);
+          // only add valve for clustered webapp
+          if (deployment.isClustered()) {
+            for (ValveDefinition def : valves) {
+              Element valve = doc.createElement("Valve");
+              for (Entry<String, String> attr : def.getAttributes().entrySet()) {
+                valve.setAttribute(attr.getKey(), attr.getValue());
+              }
 
-          for (ValveDefinition def : valves) {
-            Element valve = doc.createElement("Valve");
-            for (Entry<String, String> attr : def.getAttributes().entrySet()) {
-              valve.setAttribute(attr.getKey(), attr.getValue());
+              context.appendChild(valve);
             }
-
-            context.appendChild(valve);
           }
         }
 
@@ -99,22 +109,25 @@ public class TomcatStartupActions {
     }
   }
 
-  private static void configureManager(AppServerParameters params, InstalledLocalContainer container,
-                                       int catalinaPropsLine) throws Exception {
+  public static void configureManagerApp(AppServerParameters params, InstalledLocalContainer container) {
     AppServerInfo appServerInfo = TestConfigObject.getInstance().appServerInfo();
     String managerPath = "server/webapps/manager";
     if (Integer.valueOf(appServerInfo.getMajor()) >= 6) {
       managerPath = "webapps/manager";
     }
     File managerApp = new File(container.getHome(), managerPath);
-    
+
     String managerXml = "<Context path='/manager' debug='0' privileged='true' docBase='" + managerApp.getAbsolutePath()
                         + "'></Context>";
     File managerContextFile = new File(container.getConfiguration().getHome(), "/conf/Catalina/localhost/manager.xml");
     managerContextFile.getParentFile().mkdirs();
-    FileOutputStream out = new FileOutputStream(managerContextFile);
+    FileOutputStream out = null;
+
     try {
+      out = new FileOutputStream(managerContextFile);
       IOUtils.write(managerXml, out);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     } finally {
       IOUtils.closeQuietly(out);
     }
