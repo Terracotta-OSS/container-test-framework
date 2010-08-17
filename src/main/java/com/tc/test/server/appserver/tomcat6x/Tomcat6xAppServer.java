@@ -38,7 +38,7 @@ public final class Tomcat6xAppServer extends CargoAppServer {
   protected void setConfigProperties(LocalConfiguration config) throws Exception {
     config.setProperty(GeneralPropertySet.RMI_PORT, Integer.toString(AppServerUtil.getPort()));
   }
-
+  
   private static class TCTomcat6xInstalledLocalContainer extends Tomcat6xInstalledLocalContainer {
 
     private final AppServerParameters params;

@@ -40,11 +40,6 @@ public final class Weblogic9xAppServer extends WeblogicAppServerBase {
   }
 
   @Override
-  protected void setExtraClasspath(AppServerParameters params) {
-    container().setExtraClasspath(params.classpath().split(String.valueOf(File.pathSeparatorChar)));
-  }
-
-  @Override
   protected void setConfigProperties(LocalConfiguration config) throws Exception {
     // config.setProperty(WebLogicPropertySet.DOMAIN, "domain");
   }

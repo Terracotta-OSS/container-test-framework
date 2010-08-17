@@ -576,8 +576,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       this.retryNum = retryNum;
     }
 
-    public String classpath() {
-      return delegate.classpath();
+    public List<String> extraClasspath() {
+      return delegate.extraClasspath();
     }
 
     public String instanceName() {

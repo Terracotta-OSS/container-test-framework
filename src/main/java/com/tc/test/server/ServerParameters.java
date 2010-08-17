@@ -3,6 +3,8 @@
  */
 package com.tc.test.server;
 
+import java.util.List;
+
 /**
  * Arguments passed to a server to be utilized in it's initialization.
  */
@@ -10,5 +12,5 @@ public interface ServerParameters {
 
   String jvmArgs();
 
-  String classpath();
+  List<String> extraClasspath();
 }

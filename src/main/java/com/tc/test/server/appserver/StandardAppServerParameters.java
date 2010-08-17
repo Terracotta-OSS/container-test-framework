@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -32,6 +33,7 @@ public class StandardAppServerParameters implements AppServerParameters {
   private final Properties                  props;
   private String                            jvmArgs          = "";
   private String                            classpath        = "";
+  private List<String>                      extraClassPath   = new ArrayList<String>();
 
   public StandardAppServerParameters(String instanceName, Properties props) {
     this.instanceName = instanceName;
@@ -62,12 +64,12 @@ public class StandardAppServerParameters implements AppServerParameters {
     this.jvmArgs += jvmArgsVar + " ";
   }
 
-  public final String classpath() {
-    return classpath;
+  public final List<String> extraClasspath() {
+    return extraClassPath;
   }
 
   public final void appendClasspath(String classpathVar) {
-    this.classpath += classpathVar + " ";
+    extraClassPath.add(classpathVar);
   }
 
   public final Map<String, File> wars() {

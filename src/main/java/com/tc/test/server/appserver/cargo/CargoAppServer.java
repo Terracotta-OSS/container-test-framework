@@ -67,8 +67,8 @@ public abstract class CargoAppServer extends AbstractAppServer {
     ConfigurationFactory factory = new DefaultConfigurationFactory();
     LocalConfiguration config = (LocalConfiguration) factory.createConfiguration(cargoServerKey(),
                                                                                  ContainerType.INSTALLED,
-                                                                                 ConfigurationType.STANDALONE, instance
-                                                                                     .getAbsolutePath());
+                                                                                 ConfigurationType.STANDALONE,
+                                                                                 instance.getAbsolutePath());
     setConfigProperties(config);
     config.setProperty(ServletPropertySet.PORT, Integer.toString(port));
     config.setProperty(GeneralPropertySet.JVMARGS, params.jvmArgs());
@@ -129,7 +129,7 @@ public abstract class CargoAppServer extends AbstractAppServer {
 
   /**
    * Create a linked java process {@link LinkedJavaProcessPollingAgent}
-   *
+   * 
    * @throws InterruptedException
    */
   private void linkJavaProcess(final File instance) throws InterruptedException {
@@ -150,7 +150,11 @@ public abstract class CargoAppServer extends AbstractAppServer {
   }
 
   protected void setExtraClasspath(final AppServerParameters params) {
-    // do nothing
+    if (params.extraClasspath().size() > 0) {
+      String[] extraClasspath = params.extraClasspath().toArray(new String[0]);
+      container().setExtraClasspath(extraClasspath);
+      System.out.println("XXX adding extra classpath for " + params.instanceName() + ": " + params.extraClasspath());
+    }
   }
 
 }

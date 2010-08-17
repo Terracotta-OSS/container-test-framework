@@ -33,10 +33,6 @@ public final class Weblogic8xAppServer extends CargoAppServer {
     return new TCWebLogic8xInstalledLocalContainer(config);
   }
 
-  protected void setExtraClasspath(AppServerParameters params) {
-    container().setExtraClasspath(params.classpath().split(String.valueOf(File.pathSeparatorChar)));
-  }
-
   protected void setConfigProperties(LocalConfiguration config) throws Exception {
     // config.setProperty(WebLogicPropertySet.DOMAIN, "domain");
   }
