@@ -163,6 +163,13 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       proxyBuilderMap.put(RmiServiceExporter.class, new RMIProxyBuilder());
       proxyBuilderMap.put(HttpInvokerServiceExporter.class, new HttpInvokerProxyBuilder());
     }
+    
+    // pass along product key path to app server if found
+    // used for EE testing
+    String productKey = config.getProperty("productkey.path");
+    if (productKey != null) {
+      parameters.appendSysProp("com.tc.productkey.path", productKey);
+    }
   }
 
   public static boolean dsoEnabled() {
