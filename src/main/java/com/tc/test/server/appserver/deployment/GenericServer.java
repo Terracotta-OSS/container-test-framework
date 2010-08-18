@@ -166,7 +166,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     
     // pass along product key path to app server if found
     // used for EE testing
-    String productKey = config.getProperty("productkey.path");
+    String productKey = config.getProperty("com.tc.productkey.path");
     if (productKey != null) {
       parameters.appendSysProp("com.tc.productkey.path", productKey);
     }
