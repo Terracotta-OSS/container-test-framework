@@ -93,7 +93,12 @@ public class ServerTestSetup extends TestSetup {
       Banner.warnBanner("NOT RUNNNING TEST SINCE THIS MACHINE DOES NOT HAVE AT LEAST 2GB MEMORY");
       return true;
     }
-
+    
+    if (!TestConfigObject.getInstance().transparentTestsMode().equals(TestConfigObject.TRANSPARENT_TESTS_MODE_NORMAL)) { 
+      Banner.warnBanner("NOT RUNNNING TEST BECAUSE TEST MODE IS NOT 'normal'");
+      return true; 
+    }
+    
     for (Enumeration e = ((TestSuite) fTest).tests(); e.hasMoreElements();) {
       Object o = e.nextElement();
       if (o instanceof AbstractDeploymentTestCase && ((AbstractDeploymentTestCase) o).shouldDisable()) { return true; }
