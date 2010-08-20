@@ -407,7 +407,7 @@ public class ServerManager {
   }
 
   public DeploymentBuilder makeDeploymentBuilder(final String warFileName, boolean addExpressConfig) {
-    DeploymentBuilder builder = new WARBuilder(warFileName, warDir, config);
+    DeploymentBuilder builder = new WARBuilder(warFileName, warDir, config, addExpressConfig);
     if (addExpressConfig) {
       addExpressModeWarConfig(builder);
     }

@@ -32,9 +32,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.Map.Entry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -70,21 +70,23 @@ public class WARBuilder implements DeploymentBuilder {
 
   private final TestConfigObject testConfig;
   private final FileSystemPath   tmpResourcePath;
+  private boolean                clustered;
 
   public WARBuilder(File tempDir, TestConfigObject config) throws IOException {
-    this(File.createTempFile("test", ".war", tempDir).getAbsolutePath(), tempDir, config);
+    this(File.createTempFile("test", ".war", tempDir).getAbsolutePath(), tempDir, config, true);
   }
 
   public WARBuilder(String warFileName, File tempDir) {
-    this(warFileName, tempDir, TestConfigObject.getInstance());
+    this(warFileName, tempDir, TestConfigObject.getInstance(), true);
   }
 
-  public WARBuilder(String warFileName, File tempDir, TestConfigObject config) {
+  public WARBuilder(String warFileName, File tempDir, TestConfigObject config, boolean clustered) {
     this.warFileName = warFileName;
     this.tempDirPath = new FileSystemPath(tempDir);
     this.testConfig = config;
 
     this.tmpResourcePath = tempDirPath.mkdir("tempres");
+    this.clustered = clustered;
 
     // this is needed for spring tests
     addDirectoryOrJARContainingClass(WARBuilder.class); // test framework
@@ -120,7 +122,12 @@ public class WARBuilder implements DeploymentBuilder {
     warTask.execute();
     warDirectoryPath.delete();
 
-    return new WARDeployment(warFile);
+    Deployment deployment = new WARDeployment(warFile, clustered);
+    return deployment;
+  }
+  
+  public boolean isClustered() {
+    return clustered;
   }
 
   private FileSystemPath makeWARFileName() {
@@ -286,11 +293,10 @@ public class WARBuilder implements DeploymentBuilder {
 
       pw.println("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
 
-      pw
-          .println("<web-app xmlns=\"http://java.sun.com/xml/ns/j2ee\"\n"
-                   + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-                   + "xsi:schemaLocation=\"http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd\"\n"
-                   + "version=\"2.4\">\n");
+      pw.println("<web-app xmlns=\"http://java.sun.com/xml/ns/j2ee\"\n"
+                 + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                 + "xsi:schemaLocation=\"http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd\"\n"
+                 + "version=\"2.4\">\n");
 
       if (!beanDefinitionFiles.isEmpty()) {
         writeContextParam(pw, ContextLoader.CONFIG_LOCATION_PARAM, generateContextConfigLocationValue());
@@ -709,8 +715,8 @@ public class WARBuilder implements DeploymentBuilder {
     }
     Assert.assertTrue("URL should end with: " + classNameAsPath, urlAsString.endsWith(classNameAsPath));
     if (urlAsString.startsWith("file:")) {
-      return FileSystemPath.existingDir(urlAsString.substring("file:".length(), urlAsString.length()
-                                                                                - classNameAsPath.length()));
+      return FileSystemPath.existingDir(urlAsString.substring("file:".length(),
+                                                              urlAsString.length() - classNameAsPath.length()));
     } else if (urlAsString.startsWith("jar:file:")) {
       int n = urlAsString.indexOf('!');
       return FileSystemPath.makeExistingFile(urlAsString.substring("jar:file:".length(), n));

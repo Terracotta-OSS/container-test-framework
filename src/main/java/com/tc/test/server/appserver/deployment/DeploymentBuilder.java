@@ -56,4 +56,6 @@ public interface DeploymentBuilder {
   public Deployment makeDeployment() throws Exception;
 
   public void setParentApplicationContextRef(String locatorFactorySelector, String parentContextKey);
+  
+  public boolean isClustered();
 }

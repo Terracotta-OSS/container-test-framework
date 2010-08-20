@@ -9,15 +9,11 @@ public class WARDeployment implements Deployment {
   private final FileSystemPath warFile;
   private boolean clustered;
 
-  public WARDeployment(FileSystemPath warFile) {
+  public WARDeployment(FileSystemPath warFile, boolean clustered) {
     this.warFile = warFile;
-    this.clustered = true;
-  }
-  
-  public void setClustered(boolean clustered) {
     this.clustered = clustered;
   }
-
+  
   public FileSystemPath getFileSystemPath() {
     return warFile;
   }

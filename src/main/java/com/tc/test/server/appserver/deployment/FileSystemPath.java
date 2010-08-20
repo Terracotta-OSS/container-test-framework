@@ -68,11 +68,6 @@ public class FileSystemPath {
     return makeExistingFile(this.path + "/" + fileName);
   }
   
-  public Deployment warDeployment(String warName) {
-    return new WARDeployment(existingFile(warName));
-  }
-  
-
   public File getFile() {
     return path;
   }

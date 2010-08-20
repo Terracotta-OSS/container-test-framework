@@ -40,7 +40,7 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
 
   @Override
   protected InstalledLocalContainer container(LocalConfiguration config, AppServerParameters params) {
-    return new TCWebLogic10xInstalledLocalContainer(config);
+    return new TCWebLogic10xInstalledLocalContainer(config, params);
   }
 
   @Override
@@ -49,9 +49,11 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
   }
 
   private static class TCWebLogic10xInstalledLocalContainer extends WebLogic10xInstalledLocalContainer {
-
-    public TCWebLogic10xInstalledLocalContainer(LocalConfiguration configuration) {
+    private final AppServerParameters params;
+    
+    public TCWebLogic10xInstalledLocalContainer(LocalConfiguration configuration, AppServerParameters params) {
       super(configuration);
+      this.params = params;
     }
 
     @Override
@@ -146,6 +148,7 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
                                                   new File(modulesDir,
                                                            "net.sf.antcontrib_1.0.0.0_1-0b2/lib/ant-contrib.jar"));
       }
+      params.properties().setProperty("classpath", classpath.toString());
     }
   }
 
