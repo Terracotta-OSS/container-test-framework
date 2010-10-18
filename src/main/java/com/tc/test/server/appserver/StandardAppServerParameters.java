@@ -32,8 +32,7 @@ public class StandardAppServerParameters implements AppServerParameters {
   private final String                      instanceName;
   private final Properties                  props;
   private String                            jvmArgs          = "";
-  private String                            classpath        = "";
-  private List<String>                      extraClassPath   = new ArrayList<String>();
+  private final List<String>                extraClassPath   = new ArrayList<String>();
 
   public StandardAppServerParameters(String instanceName, Properties props) {
     this.instanceName = instanceName;

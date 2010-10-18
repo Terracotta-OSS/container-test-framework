@@ -8,8 +8,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.cargo.container.deployable.WAR;
-import org.codehaus.cargo.util.log.SimpleLogger;
 import org.springframework.remoting.RemoteLookupFailureException;
 import org.springframework.remoting.httpinvoker.CommonsHttpInvokerRequestExecutor;
 import org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean;
@@ -163,7 +161,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       proxyBuilderMap.put(RmiServiceExporter.class, new RMIProxyBuilder());
       proxyBuilderMap.put(HttpInvokerServiceExporter.class, new HttpInvokerProxyBuilder());
     }
-    
+
     // pass along product key path to app server if found
     // used for EE testing
     String productKey = config.getProperty("com.tc.productkey.path");
@@ -355,12 +353,12 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
   // TODO - CARGO specific code
 
-  private WAR makeWar(final String warContext, final FileSystemPath warPath) {
-    WAR war = new WAR(warPath.toString());
-    war.setContext(warContext);
-    war.setLogger(new SimpleLogger());
-    return war;
-  }
+  // private WAR makeWar(final String warContext, final FileSystemPath warPath) {
+  // WAR war = new WAR(warPath.toString());
+  // war.setContext(warContext);
+  // war.setLogger(new SimpleLogger());
+  // return war;
+  // }
 
   // end tomcat specific code
 
