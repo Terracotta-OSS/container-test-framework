@@ -10,7 +10,8 @@ import java.util.Map.Entry;
 public class ValveDefinition {
 
   private final String              className;
-  private final Map<String, String> attributes = new LinkedHashMap<String, String>();
+  private final Map<String, String> attributes   = new LinkedHashMap<String, String>();
+  private boolean                   isExpressVal = false;
 
   public ValveDefinition(String className) {
     this.className = className;
@@ -19,6 +20,14 @@ public class ValveDefinition {
 
   public String getClassName() {
     return className;
+  }
+
+  public boolean isExpressVal() {
+    return isExpressVal;
+  }
+
+  public void setExpressVal(boolean flag) {
+    isExpressVal = flag;
   }
 
   public void setAttribute(String name, String value) {

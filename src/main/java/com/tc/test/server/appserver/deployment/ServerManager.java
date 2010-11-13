@@ -535,6 +535,7 @@ public class ServerManager {
 
   private ValveDefinition makeValveDef() {
     ValveDefinition valve = new ValveDefinition(Mappings.getClassForAppServer(config.appServerInfo()));
+    valve.setExpressVal(true);
     for (Entry<String, String> attr : getConfigAttributes().entrySet()) {
       valve.setAttribute(attr.getKey(), attr.getValue());
     }

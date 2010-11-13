@@ -36,6 +36,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 public class TomcatStartupActions {
+  public static final String USE_NIO_PROTOCOL_KEY = "useNioProtocol";
+
   private TomcatStartupActions() {
     //
   }
@@ -43,6 +45,9 @@ public class TomcatStartupActions {
   public static void modifyConfig(AppServerParameters params, InstalledLocalContainer container, int catalinaPropsLine) {
     try {
       modifyConfig0(params, container, catalinaPropsLine);
+      if (Boolean.valueOf(params.properties().getProperty(USE_NIO_PROTOCOL_KEY))) {
+        switchToNioProtocol(params, container);
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -67,16 +72,18 @@ public class TomcatStartupActions {
           String appContext = contextPath.substring(1);
           Deployment deployment = deployments.get(appContext);
           Assert.assertNotNull(deployment);
-          // only add valve for clustered webapp
-          if (deployment.isClustered()) {
-            for (ValveDefinition def : valves) {
-              Element valve = doc.createElement("Valve");
-              for (Entry<String, String> attr : def.getAttributes().entrySet()) {
-                valve.setAttribute(attr.getKey(), attr.getValue());
-              }
 
-              context.appendChild(valve);
+          for (ValveDefinition def : valves) {
+            // don't write out express valve if it's not clustered
+            if (def.isExpressVal() && !deployment.isClustered()) {
+              continue;
             }
+            Element valve = doc.createElement("Valve");
+            for (Entry<String, String> attr : def.getAttributes().entrySet()) {
+              valve.setAttribute(attr.getKey(), attr.getValue());
+            }
+
+            context.appendChild(valve);
           }
         }
 
@@ -131,5 +138,16 @@ public class TomcatStartupActions {
     } finally {
       IOUtils.closeQuietly(out);
     }
+  }
+
+  private static void switchToNioProtocol(AppServerParameters params, InstalledLocalContainer container)
+      throws Exception {
+    File serverXml = new File(container.getConfiguration().getHome(), "conf/server.xml");
+    Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(serverXml);
+    Element connector = (Element) doc.getElementsByTagName("Connector").item(0);
+    connector.setAttribute("protocol", "org.apache.coyote.http11.Http11NioProtocol");
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    Transformer transformer = transformerFactory.newTransformer();
+    transformer.transform(new DOMSource(doc), new StreamResult(serverXml));
   }
 }
