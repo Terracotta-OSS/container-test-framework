@@ -53,9 +53,11 @@ public interface DeploymentBuilder {
 
   public DeploymentBuilder addRemoteServiceBlock(String serviceBlock);
 
+  public DeploymentBuilder setNeededWebXml(boolean flag);
+
   public Deployment makeDeployment() throws Exception;
 
   public void setParentApplicationContextRef(String locatorFactorySelector, String parentContextKey);
-  
+
   public boolean isClustered();
 }

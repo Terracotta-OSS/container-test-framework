@@ -70,7 +70,8 @@ public class WARBuilder implements DeploymentBuilder {
 
   private final TestConfigObject testConfig;
   private final FileSystemPath   tmpResourcePath;
-  private boolean                clustered;
+  private final boolean          clustered;
+  private boolean                neededWebXml          = true;
 
   public WARBuilder(File tempDir, TestConfigObject config) throws IOException {
     this(File.createTempFile("test", ".war", tempDir).getAbsolutePath(), tempDir, config, true);
@@ -114,18 +115,22 @@ public class WARBuilder implements DeploymentBuilder {
     warTask.setDuplicate(df);
     warTask.setDestFile(warFile.getFile());
     // end XXX
-    warTask.setWebxml(warDirectoryPath.existingFile("WEB-INF/web.xml").getFile());
+    if (neededWebXml) {
+      warTask.setWebxml(warDirectoryPath.existingFile("WEB-INF/web.xml").getFile());
+    } else {
+      warTask.setNeedxmlfile(false);
+    }
     addWEBINFDirectory(warTask);
     addClassesDirectories(warTask);
     addLibs(warTask);
     addResources(warTask);
     warTask.execute();
-    warDirectoryPath.delete();
+    // warDirectoryPath.delete();
 
     Deployment deployment = new WARDeployment(warFile, clustered);
     return deployment;
   }
-  
+
   public boolean isClustered() {
     return clustered;
   }
@@ -187,7 +192,9 @@ public class WARBuilder implements DeploymentBuilder {
     this.warDirectoryPath = tempDirPath.mkdir("tempwar");
 
     FileSystemPath webInfDir = warDirectoryPath.mkdir("WEB-INF");
-    createWebXML(webInfDir);
+    if (neededWebXml) {
+      createWebXML(webInfDir);
+    }
     if (dispatcherServletName != null) {
       createDispatcherServletContext(webInfDir);
     } else if (testConfig.isSpringTest()) {
@@ -676,6 +683,11 @@ public class WARBuilder implements DeploymentBuilder {
     Assert.assertNotNull("Not found: " + type, url);
     FileSystemPath filepath = calculateDirectory(url, "/" + classToPath(type));
     return filepath;
+  }
+
+  public DeploymentBuilder setNeededWebXml(boolean flag) {
+    neededWebXml = flag;
+    return this;
   }
 
   static public FileSystemPath calculatePathToClass(Class type, String pathString) {
