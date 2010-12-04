@@ -35,7 +35,6 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
     private final Log              logger = LogFactory.getLog(getClass());
     private final String           context;
 
-    private boolean                start  = true;
     protected WebApplicationServer server0;
 
     protected OneServerTestSetup(Class testClass, String context) {
@@ -43,8 +42,13 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
       this.context = context;
     }
 
-    protected void setStart(boolean start) {
-      this.start = start;
+    protected OneServerTestSetup(Class testClass, String tcConfigFromResource, String context) {
+      super(testClass, new TcConfigBuilder(tcConfigFromResource));
+      this.context = context;
+    }
+
+    protected boolean autostart() {
+      return true;
     }
 
     @Override
@@ -85,7 +89,7 @@ public abstract class AbstractOneServerDeploymentTest extends AbstractDeployment
       server.addWarDeployment(deployment, context);
       configureServer(server);
       configureServerParamers(server.getServerParameters());
-      if (start) {
+      if (autostart()) {
         server.start();
       }
       return server;

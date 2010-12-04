@@ -39,13 +39,14 @@ import java.util.Map.Entry;
  */
 public abstract class CargoAppServer extends AbstractAppServer {
 
+  private static final int        DEFAULT_START_TIMEOUT = 8 * 60 * 1000;
   private InstalledLocalContainer container;
   private int                     port;
   private int                     linkedPort;
 
   // System property used by cargo. This String is referenced in the CARGO patch, therefore it must not be changed
-  public static final String      CARGO_JAVA       = "cargo_java";
-  public static final String      CARGO_JAVA_CLASS = CargoJava.class.getName();
+  public static final String      CARGO_JAVA            = "cargo_java";
+  public static final String      CARGO_JAVA_CLASS      = CargoJava.class.getName();
 
   static {
     System.setProperty(CARGO_JAVA, CARGO_JAVA_CLASS);
@@ -76,7 +77,8 @@ public abstract class CargoAppServer extends AbstractAppServer {
     addWars(config, params.wars(), params.instanceName());
 
     container = container(config, params);
-    container.setTimeout(8 * 60 * 1000);
+    container.setTimeout(Integer.valueOf(params.properties().getProperty(StandardAppServerParameters.START_TIMEOUT,
+                                                                         DEFAULT_START_TIMEOUT + "")));
     container.setHome(serverInstallDirectory().getAbsolutePath());
     container.setLogger(new ConsoleLogger(params.instanceName()));
     setExtraClasspath(params);

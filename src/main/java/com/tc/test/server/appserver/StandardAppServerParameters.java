@@ -24,6 +24,7 @@ import java.util.Properties;
  * immutable {@link AppServerParameters} interface.
  */
 public class StandardAppServerParameters implements AppServerParameters {
+  public static final String                START_TIMEOUT    = "START_TIMEOUT";
 
   private final Map<String, Deployment>     deployments      = new HashMap<String, Deployment>();
   private final Collection                  sars             = new ArrayList();
