@@ -43,20 +43,21 @@ import java.util.Map;
 import javax.management.MBeanServerConnection;
 
 public class GenericServer extends AbstractStoppable implements WebApplicationServer {
-  private static final String               ENABLED_DSO_PROPERTY = "tc.tests.info.appserver.dso.enabled";
-  private static final Log                  LOG                  = LogFactory.getLog(GenericServer.class);
-  private static final String               SERVER               = "server_";
-  private static final boolean              GC_LOGGING           = true;
-  private static final boolean              ENABLE_DEBUGGER      = Boolean.getBoolean(GenericServer.class.getName()
-                                                                                      + ".ENABLE_DEBUGGER");
-  private static final ThreadLocal          dsoEnabled           = new ThreadLocal() {
-                                                                   @Override
-                                                                   protected Object initialValue() {
-                                                                     return Boolean.valueOf(TestConfigObject
-                                                                         .getInstance()
-                                                                         .getProperty(ENABLED_DSO_PROPERTY, "true"));
-                                                                   }
-                                                                 };
+  private static final String               ENABLED_DSO_PROPERTY    = "tc.tests.info.appserver.dso.enabled";
+  private static final Log                  LOG                     = LogFactory.getLog(GenericServer.class);
+  private static final String               SERVER                  = "server_";
+  private static final boolean              GC_LOGGING              = true;
+  private static final boolean              ENABLE_DEBUGGER         = Boolean.getBoolean(GenericServer.class.getName()
+                                                                                         + ".ENABLE_DEBUGGER");
+  private static final ThreadLocal          dsoEnabled              = new ThreadLocal() {
+                                                                      @Override
+                                                                      protected Object initialValue() {
+                                                                        return Boolean.valueOf(TestConfigObject
+                                                                            .getInstance()
+                                                                            .getProperty(ENABLED_DSO_PROPERTY, "true"));
+                                                                      }
+                                                                    };
+  public static boolean                     USE_DEFAULT_LICENSE_KEY = true;
 
   private final int                         jmxRemotePort;
   private final int                         rmiRegistryPort;
@@ -65,8 +66,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private final StandardAppServerParameters parameters;
   private ServerResult                      result;
   private final AppServerInstallation       installation;
-  private final Map                         proxyBuilderMap      = new HashMap();
-  private ProxyBuilder                      proxyBuilder         = null;
+  private final Map                         proxyBuilderMap         = new HashMap();
+  private ProxyBuilder                      proxyBuilder            = null;
   private final File                        workingDir;
   private final String                      serverInstanceName;
   private final File                        tcConfigFile;
@@ -164,9 +165,12 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
     // pass along product key path to app server if found
     // used for EE testing
-    String productKey = config.getProperty("com.tc.productkey.path");
-    if (productKey != null) {
-      parameters.appendSysProp("com.tc.productkey.path", productKey);
+    if (USE_DEFAULT_LICENSE_KEY) {
+      String productKey = config.getProperty("com.tc.productkey.path");
+      if (productKey != null) {
+        System.out.println("XXX: adding license key to appserver: " + productKey);
+        parameters.appendSysProp("com.tc.productkey.path", productKey);
+      }
     }
   }
 
