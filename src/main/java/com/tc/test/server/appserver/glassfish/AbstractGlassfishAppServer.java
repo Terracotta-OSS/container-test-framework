@@ -64,6 +64,10 @@ import javax.xml.transform.stream.StreamResult;
  */
 public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
+  static {
+    clearAsAdminFiles();
+  }
+
   public static final int     STARTUP_RETRIES    = 3;
 
   public static final String  JAVA_CMD           = System.getProperty("java.home") + File.separator + "bin"
@@ -245,6 +249,25 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     waitForPing(nodeLogFile);
 
     return new AppServerResult(httpPort, this);
+  }
+
+  private static void clearAsAdminFiles() {
+    // These files seem to grow over time and can get corrupted -- so clear them each run
+
+    String userHome = System.getProperty("user.home");
+    if (userHome != null) {
+      File home = new File(userHome);
+      if (home.isDirectory()) {
+        for (File file : home.listFiles()) {
+          if (file.getName().equals(".asadminpass") || file.getName().equals(".asadmintruststore")) {
+            // Banner.infoBanner("Deleting " + file.getAbsolutePath());
+            if (!file.delete()) { throw new AssertionError("cannot delete: " + file.getAbsolutePath()); }
+          }
+        }
+      } else {
+        throw new AssertionError(home.getAbsolutePath() + " is not a directory?");
+      }
+    }
   }
 
   protected static boolean amxDebugCheck(final File nodeLogFile) throws IOException {
@@ -607,7 +630,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     public Collection<String> tomcatServerJars() {
       return delegate.tomcatServerJars();
     }
-    
+
     public Map deployments() {
       return delegate.deployments();
     }
