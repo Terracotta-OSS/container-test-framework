@@ -335,13 +335,7 @@ public class ServerManager {
         AppServerInfo info = config.appServerInfo();
         String major = info.getMajor();
         String minor = info.getMinor();
-        if (major.equals("6")) {
-          if (minor.startsWith("0.")) {
-            aCopy.addModule(TimUtil.JBOSS_5_1, resolveContainerTIM(TimUtil.JBOSS_5_1));
-          } else {
-            throw new RuntimeException("unexpected version: " + info);
-          }
-        } else if (major.equals("5")) {
+        if (major.equals("5")) {
           if (minor.startsWith("1.")) {
             aCopy.addModule(TimUtil.JBOSS_5_1, resolveContainerTIM(TimUtil.JBOSS_5_1));
           } else {
