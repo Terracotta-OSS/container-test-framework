@@ -79,13 +79,8 @@ public class ServerManager {
                      "http://nexus.terracotta.lan:8080/content/repositories/terracotta-snapshots/tim-get/3/index.xml.gz",
                      "http://nexus.terracotta.lan:8080/content/repositories/terracotta-snapshots"), /* snapshots */
       new TimGetUrls(
-                     "http://nexus.terracotta.lan:8080/content/repositories/terracotta-releases/tim-get/3/index.xml.gz",
-                     "http://nexus.terracotta.lan:8080/content/repositories/terracotta-releases"), /* release */
-      /*
-       * only use this for RC testing new
-       * TimGetUrls("http://nexus.terracotta.lan:8080/content/repositories/terracotta-staging/tim-get/3/index.xml.gz",
-       * "http://nexus.terracotta.lan:8080/content/repositories/terracotta-staging"),
-       */
+                     "http://nexus.terracotta.lan:8080/content/repositories/terracotta-staging/tim-get/3/index.xml.gz",
+                     "http://nexus.terracotta.lan:8080/content/groups/public"), /* release + staging */
 
       new TimGetUrls("http://www.terracotta.org/download/reflector/snapshots/tim-get/3/index.xml.gz", /* S3 */
       "http://www.terracotta.org/download/reflector/snapshots"),
