@@ -76,11 +76,6 @@ public final class JBoss6xAppServer extends CargoAppServer {
       JBossHelper.startupActions(new File(getConfiguration().getHome()), sars, appServerInfo, tomcatServerJars);
       super.doStart(java);
     }
-
-    @Override
-    protected void doStop(Java java) throws Exception {
-      super.doStop(java);
-    }
   }
 
 }
