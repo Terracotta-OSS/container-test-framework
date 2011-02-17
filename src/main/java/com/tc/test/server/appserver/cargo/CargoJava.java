@@ -10,12 +10,12 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.RuntimeConfigurable;
 import org.apache.tools.ant.Target;
 import org.apache.tools.ant.taskdefs.Java;
+import org.apache.tools.ant.types.Commandline.Argument;
 import org.apache.tools.ant.types.CommandlineJava;
 import org.apache.tools.ant.types.Environment;
+import org.apache.tools.ant.types.Environment.Variable;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Reference;
-import org.apache.tools.ant.types.Commandline.Argument;
-import org.apache.tools.ant.types.Environment.Variable;
 
 import com.tc.lcp.CargoLinkedChildProcess;
 import com.tc.test.TestConfigObject;
@@ -42,10 +42,10 @@ public final class CargoJava extends Java {
   // this static thing is TERRIBLE, but trying to get tigher integration with Cargo is worse
   public static final Link     LINK   = new Link();
 
-  private Java                 java;
+  private final Java           java;
   private Path                 classpath;
   private String               className;
-  private List                 args;
+  private final List           args;
   private boolean              dirSet = false;
 
   public CargoJava(Java java) {
@@ -120,128 +120,158 @@ public final class CargoJava extends Java {
     }
   }
 
+  @Override
   public void addEnv(Variable arg0) {
     this.java.addEnv(arg0);
   }
 
+  @Override
   public void addSysproperty(Variable arg0) {
     this.java.addSysproperty(arg0);
   }
 
+  @Override
   public void clearArgs() {
     this.java.clearArgs();
   }
 
+  @Override
   public Argument createArg() {
     Argument out = this.java.createArg();
     this.args.add(out);
     return out;
   }
 
+  @Override
   public Path createClasspath() {
     Path path = this.java.createClasspath();
     this.classpath = path;
     return path;
   }
 
+  @Override
   public Argument createJvmarg() {
     return this.java.createJvmarg();
   }
 
+  @Override
   public boolean equals(Object obj) {
     return this.java.equals(obj);
   }
 
+  @Override
   public void execute() throws BuildException {
     wrapProcess();
   }
 
+  @Override
   public int executeJava() throws BuildException {
     return this.java.executeJava();
   }
 
+  @Override
   public String getDescription() {
     return this.java.getDescription();
   }
 
+  @Override
   public Location getLocation() {
     return this.java.getLocation();
   }
 
+  @Override
   public Target getOwningTarget() {
     return this.java.getOwningTarget();
   }
 
+  @Override
   public Project getProject() {
     return this.java.getProject();
   }
 
+  @Override
   public RuntimeConfigurable getRuntimeConfigurableWrapper() {
     return this.java.getRuntimeConfigurableWrapper();
   }
 
+  @Override
   public String getTaskName() {
     return this.java.getTaskName();
   }
 
+  @Override
   public int hashCode() {
     return this.java.hashCode();
   }
 
+  @Override
   public void init() throws BuildException {
     this.java.init();
   }
 
+  @Override
   public void log(String arg0, int arg1) {
     this.java.log(arg0, arg1);
   }
 
+  @Override
   public void log(String arg0) {
     this.java.log(arg0);
   }
 
+  @Override
   public void maybeConfigure() throws BuildException {
     this.java.maybeConfigure();
   }
 
+  @Override
   public void setAppend(boolean arg0) {
     this.java.setAppend(arg0);
   }
 
+  @Override
   public void setArgs(String arg0) {
     this.java.setArgs(arg0);
   }
 
+  @Override
   public void setClassname(String arg0) throws BuildException {
     this.className = arg0;
     this.java.setClassname(arg0);
   }
 
+  @Override
   public void setClasspath(Path arg0) {
     this.java.setClasspath(arg0);
   }
 
+  @Override
   public void setClasspathRef(Reference arg0) {
     this.java.setClasspathRef(arg0);
   }
 
+  @Override
   public void setDescription(String arg0) {
     this.java.setDescription(arg0);
   }
 
+  @Override
   public void setDir(File arg0) {
     this.java.setDir(arg0);
     dirSet = true;
   }
 
+  @Override
   public void setFailonerror(boolean arg0) {
     this.java.setFailonerror(arg0);
   }
 
+  @Override
   public void setFork(boolean arg0) {
     this.java.setFork(arg0);
   }
 
+  @Override
   public void setJar(File arg0) throws BuildException {
     try {
       String absPath = arg0.getCanonicalFile().getParentFile().getParent();
@@ -281,54 +311,67 @@ public final class CargoJava extends Java {
   // return extraClassPath;
   // }
 
+  @Override
   public void setJvm(String arg0) {
     this.java.setJvm(arg0);
   }
 
+  @Override
   public void setJvmargs(String arg0) {
     this.java.setJvmargs(arg0);
   }
 
+  @Override
   public void setJVMVersion(String arg0) {
     this.java.setJVMVersion(arg0);
   }
 
+  @Override
   public void setLocation(Location arg0) {
     this.java.setLocation(arg0);
   }
 
+  @Override
   public void setMaxmemory(String arg0) {
     this.java.setMaxmemory(arg0);
   }
 
+  @Override
   public void setNewenvironment(boolean arg0) {
     this.java.setNewenvironment(arg0);
   }
 
+  @Override
   public void setOutput(File arg0) {
     this.java.setOutput(arg0);
   }
 
+  @Override
   public void setOwningTarget(Target arg0) {
     this.java.setOwningTarget(arg0);
   }
 
+  @Override
   public void setProject(Project arg0) {
     this.java.setProject(arg0);
   }
 
+  @Override
   public void setRuntimeConfigurableWrapper(RuntimeConfigurable arg0) {
     this.java.setRuntimeConfigurableWrapper(arg0);
   }
 
+  @Override
   public void setTaskName(String arg0) {
     this.java.setTaskName(arg0);
   }
 
+  @Override
   public void setTimeout(Long arg0) {
     this.java.setTimeout(arg0);
   }
 
+  @Override
   public String toString() {
     return this.java.toString();
   }

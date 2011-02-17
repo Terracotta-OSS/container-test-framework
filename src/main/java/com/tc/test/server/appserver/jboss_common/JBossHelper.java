@@ -25,8 +25,10 @@ import java.util.List;
 public class JBossHelper {
   public static void startupActions(File serverDir, Collection sars, AppServerInfo appServerInfo,
                                     Collection<String> tomcatServerJars) throws IOException {
-    if (appServerInfo.getMajor().equals("5") && appServerInfo.getMinor().startsWith("1")) {
+    if ((appServerInfo.getMajor().equals("5") && appServerInfo.getMinor().startsWith("1"))) {
       writePortsConfigJBoss51x(new PortChooser(), serverDir, appServerInfo);
+    } else if (appServerInfo.getMajor().equals("6") && appServerInfo.getMinor().startsWith("0")) {
+      writePortsConfigJBoss6x(new PortChooser(), serverDir, appServerInfo);
     } else {
       writePortsConfig(new PortChooser(), new File(serverDir, "conf/cargo-binding.xml"), appServerInfo);
     }
@@ -105,6 +107,28 @@ public class JBossHelper {
     tokens.clear();
     dest = new File(serverDir, "deploy/ejb3-connectors-jboss-beans.xml");
     tokens.add(new ReplaceLine.Token(36, "3873", String.valueOf(pc.chooseRandomPort())));
+    ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
+  }
+
+  private static void writePortsConfigJBoss6x(PortChooser pc, File serverDir, AppServerInfo appServerInfo)
+      throws IOException {
+    List<ReplaceLine.Token> tokens = new ArrayList<ReplaceLine.Token>();
+    File dest = new File(serverDir, "conf/bindingservice.beans/META-INF/bindings-jboss-beans.xml");
+
+    // randomize more ports
+    int[] lines = new int[] { 167, 174, 182, 205, 212, 220, 229, 236, 250, 302, 311, 320, 327, 334, 341, 368, 412, 420,
+        430, 439, 453, 461, 470, 480, 493 };
+    for (int line : lines) {
+      int port = pc.chooseRandomPort();
+      tokens.add(new ReplaceLine.Token(line, "\"port\">[0-9]+", "\"port\">" + port));
+    }
+
+    ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
+
+    // handling another file
+    tokens.clear();
+    dest = new File(serverDir, "deploy/ejb3-connectors-jboss-beans.xml");
+    tokens.add(new ReplaceLine.Token(38, "3873", String.valueOf(pc.chooseRandomPort())));
     ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
   }
 
