@@ -335,7 +335,13 @@ public class ServerManager {
         AppServerInfo info = config.appServerInfo();
         String major = info.getMajor();
         String minor = info.getMinor();
-        if (major.equals("5")) {
+        if (major.equals("6")) {
+          if (minor.startsWith("0.")) {
+            aCopy.addModule(TimUtil.JBOSS_6_0, resolveContainerTIM(TimUtil.JBOSS_6_0));
+          } else {
+            throw new RuntimeException("unexpected version: " + info);
+          }
+        } else if (major.equals("5")) {
           if (minor.startsWith("1.")) {
             aCopy.addModule(TimUtil.JBOSS_5_1, resolveContainerTIM(TimUtil.JBOSS_5_1));
           } else {
@@ -654,6 +660,7 @@ public class ServerManager {
       mappings.put("jboss-4.0.", "TerracottaJboss40xSessionValve");
       mappings.put("jboss-4.2.", "TerracottaJboss42xSessionValve");
       mappings.put("jboss-5.1.", "TerracottaJboss51xSessionValve");
+      mappings.put("jboss-6.0.", "TerracottaJboss60xSessionValve");
       mappings.put("weblogic-9.", "TerracottaWeblogic9xSessionFilter");
       mappings.put("weblogic-10.", "TerracottaWeblogic10xSessionFilter");
       mappings.put("jetty-6.1.", "TerracottaJetty61xSessionFilter");

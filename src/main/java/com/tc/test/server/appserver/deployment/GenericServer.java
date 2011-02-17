@@ -104,8 +104,10 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     }
 
     appId = config.appServerId();
-    // glassfish fails with these options on
-    if (appId != AppServerInfo.GLASSFISH) {
+    // glassfish, jboss6x fails with these options on
+    // see https://issues.jboss.org/browse/JBAS-7669 for jboss6
+    if (appId != AppServerInfo.GLASSFISH
+        && !(appId == AppServerInfo.JBOSS && "6".equals(config.appServerInfo().getMajor()))) {
       parameters.appendSysProp("com.sun.management.jmxremote");
       parameters.appendSysProp("com.sun.management.jmxremote.authenticate", false);
       parameters.appendSysProp("com.sun.management.jmxremote.ssl", false);

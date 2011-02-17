@@ -29,11 +29,11 @@
       <artifactId>test-api</artifactId>
       <version>${terracotta.core.version}</version>
       <scope>provided</scope>
-    </dependency>
+    </dependency> 
     <dependency>
       <groupId>org.terracotta</groupId>
       <artifactId>tc-cargo-core-uberjar</artifactId>
-      <version>0.9.20091124</version>
+      <version>0.9.20110216</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

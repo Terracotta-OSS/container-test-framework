@@ -42,8 +42,8 @@ public final class JBoss51xAppServer extends CargoAppServer {
   @Override
   protected void setConfigProperties(LocalConfiguration config) throws Exception {
     config.setProperty(GeneralPropertySet.RMI_PORT, Integer.toString(AppServerUtil.getPort()));
-    config.setProperty(JBossPropertySet.JBOSS51X_AJP_CONNECTOR_PORT, Integer.toString(AppServerUtil.getPort()));
-    config.setProperty(JBossPropertySet.JBOSS51X_HTTP_CONNECTOR_PORT, Integer.toString(AppServerUtil.getPort()));
+    config.setProperty(JBossPropertySet.JBOSS_AJP_CONNECTOR_PORT, Integer.toString(AppServerUtil.getPort()));
+    config.setProperty(JBossPropertySet.JBOSS_HTTP_CONNECTOR_PORT, Integer.toString(AppServerUtil.getPort()));
   }
 
   private static class TCJBoss51xInstalledLocalContainer extends JBoss51xInstalledLocalContainer {
