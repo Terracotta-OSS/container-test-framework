@@ -133,23 +133,23 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       case AppServerInfo.TOMCAT:
       case AppServerInfo.JBOSS:
         parameters.appendJvmArgs("-Djvmroute=" + serverInstanceName);
-        parameters.appendJvmArgs("-XX:MaxPermSize=128m");
+        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
         parameters.appendJvmArgs("-Xms128m -Xmx192m");
         break;
       case AppServerInfo.WEBLOGIC:
         // bumped up because ContainerHibernateTest was failing with WL 9
-        parameters.appendJvmArgs("-XX:MaxPermSize=128m");
+        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
         parameters.appendJvmArgs("-Xms128m -Xmx192m");
         break;
       case AppServerInfo.GLASSFISH:
         // bumped up because ContainerHibernateTest, ContinuationsTest was failing with glassfish-v1
-        parameters.appendJvmArgs("-XX:MaxPermSize=128m");
+        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
         parameters.appendJvmArgs("-Xms128m -Xmx192m");
         // parameters.appendJvmArgs("-XX:+PrintGCDetails");
         break;
       case AppServerInfo.WEBSPHERE:
         parameters.appendSysProp("javax.management.builder.initial", "");
-        parameters.appendJvmArgs("-XX:MaxPermSize=128m");
+        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
         parameters.appendJvmArgs("-Xms128m -Xmx192m");
         break;
     }
@@ -196,9 +196,22 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private void enableDebug(final int serverId) {
     if (GC_LOGGING && !Vm.isIBM() && appId != AppServerInfo.WEBSPHERE) {
       parameters.appendJvmArgs("-verbose:gc");
-      parameters.appendJvmArgs("-XX:+PrintGCDetails");
-      parameters.appendJvmArgs("-XX:+PrintGCTimeStamps");
-      parameters.appendJvmArgs("-Xloggc:"
+
+      if (!Vm.isJRockit()) {
+        parameters.appendJvmArgs("-XX:+PrintGCDetails");
+        parameters.appendJvmArgs("-XX:+PrintGCTimeStamps");
+      }
+
+      final String gcLogSwitch;
+      if (Vm.isJRockit()) {
+        gcLogSwitch = "verboselog";
+      } else {
+        gcLogSwitch = "loggc";
+      }
+
+      parameters.appendJvmArgs("-X"
+                               + gcLogSwitch
+                               + ":"
                                + new File(this.installation.sandboxDirectory(), serverInstanceName + "-gc.log")
                                    .getAbsolutePath());
     }
