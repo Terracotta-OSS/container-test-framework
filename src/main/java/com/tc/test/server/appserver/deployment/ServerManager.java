@@ -84,7 +84,7 @@ public class ServerManager {
       /*
        * only use this for RC testing new
        * TimGetUrls("http://nexus.terracotta.lan:8080/content/repositories/terracotta-staging/tim-get/3/index.xml.gz",
-       * "http://nexus.terracotta.lan:8080/content/repositories/terracotta-staging"),
+       * "http://nexus.terracotta.lan:8080/content/groups/public"),
        */
       new TimGetUrls("http://www.terracotta.org/download/reflector/snapshots/tim-get/3/index.xml.gz", /* S3 */
       "http://www.terracotta.org/download/reflector/snapshots"),
