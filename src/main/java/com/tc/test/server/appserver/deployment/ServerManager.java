@@ -77,7 +77,7 @@ public class ServerManager {
   private static final TimGetUrls[]   TIM_GET_URLS   = {
       new TimGetUrls(
                      "http://nexus.terracotta.lan:8080/content/repositories/terracotta-staging/tim-get/3/index.xml.gz",
-                     "http://nexus.terracotta.lan:8080/content/repositories/terracotta-staging"),
+                     "http://nexus.terracotta.lan:8080/content/groups/public"),
       new TimGetUrls(
                      "http://nexus.terracotta.lan:8080/content/repositories/terracotta-snapshots/tim-get/3/index.xml.gz",
                      "http://nexus.terracotta.lan:8080/content/repositories/terracotta-snapshots"), /* snapshots */
