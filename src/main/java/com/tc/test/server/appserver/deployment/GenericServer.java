@@ -139,7 +139,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       case AppServerInfo.WEBLOGIC:
         // bumped up because ContainerHibernateTest was failing with WL 9
         if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
-        parameters.appendJvmArgs("-Xms128m -Xmx192m");
+        parameters.appendJvmArgs("-Xms128m -Xmx256m");
         break;
       case AppServerInfo.GLASSFISH:
         // bumped up because ContainerHibernateTest, ContinuationsTest was failing with glassfish-v1
