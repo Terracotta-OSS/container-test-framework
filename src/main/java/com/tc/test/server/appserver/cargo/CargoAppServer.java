@@ -94,7 +94,7 @@ public abstract class CargoAppServer extends AbstractAppServer {
     // override if desired
   }
 
-  public final void stop(final ServerParameters rawParams) {
+  public void stop(final ServerParameters rawParams) {
     if (container != null) {
       if (container.getState().equals(State.STARTED) || container.getState().equals(State.STARTING)
           || container.getState().equals(State.UNKNOWN)) {
