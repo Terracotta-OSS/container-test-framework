@@ -101,8 +101,7 @@ public class Jetty7xAppServer extends AbstractAppServer {
     cmd.add(0, JAVA_CMD);
     cmd.add("-cp");
     cmd.add(this.serverInstallDirectory() + File.separator + "start.jar" + File.pathSeparator
-            + TestConfigObject.getInstance().extraClassPathForAppServer() + File.pathSeparator
-            + System.getProperty("java.class.path"));
+            + TestConfigObject.getInstance().extraClassPathForAppServer());
     cmd.add("-Djetty.home=" + this.serverInstallDirectory());
     cmd.add("-Djetty.port=" + jetty_port);
     cmd.add("-Djava.io.tmpdir=" + workDir.getAbsolutePath());

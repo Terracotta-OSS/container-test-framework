@@ -314,6 +314,8 @@ public class ServerManager {
         String minor = info.getMinor();
         if (major.equals("6") || minor.startsWith("1.")) {
           aCopy.addModule(TimUtil.JETTY_6_1, resolveContainerTIM(TimUtil.JETTY_6_1));
+        } else if (major.equals("7")) {
+          // do nothing, jetty7 doesn't work in custom mode
         } else {
           throw new RuntimeException("unexpected version: " + info);
         }

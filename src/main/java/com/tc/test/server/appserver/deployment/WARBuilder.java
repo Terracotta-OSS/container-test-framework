@@ -15,6 +15,7 @@ import org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping;
 
 import com.tc.logging.TCLogger;
 import com.tc.logging.TCLogging;
+import com.tc.test.TCTestCase;
 import com.tc.test.TestConfigObject;
 
 import java.io.File;
@@ -39,6 +40,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import junit.framework.Assert;
+import junit.framework.TestCase;
 
 /*
  * <!ELEMENT web-app (icon?, display-name?, description?, distributable?, context-param, filter, filter-mapping,
@@ -91,6 +93,8 @@ public class WARBuilder implements DeploymentBuilder {
 
     // this is needed for spring tests
     addDirectoryOrJARContainingClass(WARBuilder.class); // test framework
+    addDirectoryOrJARContainingClass(TCTestCase.class); // test-api
+    addDirectoryOrJARContainingClass(TestCase.class); // junit
   }
 
   public DeploymentBuilder addClassesDirectory(FileSystemPath path) {
