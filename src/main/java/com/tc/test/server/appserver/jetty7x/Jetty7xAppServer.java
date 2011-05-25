@@ -16,12 +16,11 @@ import com.tc.test.server.appserver.deployment.GenericServer;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.util.PortChooser;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,9 +38,8 @@ public class Jetty7xAppServer extends AbstractAppServer {
   private static final String  JETTY_MAIN_CLASS   = "org.eclipse.jetty.start.Main";
   private static final long    START_STOP_TIMEOUT = 240 * 1000;
 
-  private static final String  contextsTarget     = "<Property name=\"jetty.home\" default=\".\" />/contexts";
+  private String               jettyConfigFile;
 
-  private String               configFile;
   private String               instanceName;
   private File                 instanceDir;
   private File                 workDir;
@@ -114,8 +112,9 @@ public class Jetty7xAppServer extends AbstractAppServer {
     }
     cmd.add("STOP.PORT=" + stop_port);
     cmd.add("STOP.KEY=" + STOP_KEY);
+    // cmd.add("DEBUG=true");
     cmd.add("OPTIONS=All");
-    cmd.add(configFile);
+    cmd.add(jettyConfigFile);
 
     final String[] cmdArray = (String[]) cmd.toArray(new String[] {});
     final String nodeLogFile = new File(instanceDir + ".log").getAbsolutePath();
@@ -135,6 +134,7 @@ public class Jetty7xAppServer extends AbstractAppServer {
     };
     runner.start();
     System.err.println("Starting jetty " + instanceName + " on port " + jetty_port + "...");
+    System.err.println("Cmd: " + Arrays.asList(cmdArray));
     AppServerUtil.waitForPort(jetty_port, START_STOP_TIMEOUT);
     System.err.println("Started " + instanceName + " on port " + jetty_port);
     return new AppServerResult(jetty_port, this);
@@ -175,6 +175,7 @@ public class Jetty7xAppServer extends AbstractAppServer {
     ensureDirectory(logsDir);
 
     setProperties(params, jetty_port, instanceDir);
+
     createConfigFile();
   }
 
@@ -204,35 +205,17 @@ public class Jetty7xAppServer extends AbstractAppServer {
   }
 
   private void createConfigFile() throws Exception {
-    String origialConfig = this.serverInstallDirectory().getAbsolutePath() + File.separator + "etc" + File.separator
-                           + "jetty-contexts.xml";
-    if (new File(origialConfig).exists() == false) { throw new Exception(origialConfig + " doesn't exist."); }
-
-    StringBuffer buffer = new StringBuffer(1024);
-    BufferedReader in = null;
     PrintWriter out = null;
 
     try {
-      in = new BufferedReader(new FileReader(origialConfig));
-      String line;
-      while ((line = in.readLine()) != null) {
-        buffer.append(line).append("\n");
-      }
+      String jettyXmlContent = getJettyXml();
+      jettyXmlContent = jettyXmlContent.replace("TC_CONTEXT_DIR", getContextsDirectory().getAbsolutePath());
+      jettyXmlContent = jettyXmlContent.replace("TC_WORKER_NAME", instanceName);
 
-      int startIndex = buffer.indexOf(contextsTarget);
-      if (startIndex > 0) {
-        int endIndex = startIndex + contextsTarget.length();
-        buffer.replace(startIndex, endIndex, getContextsDirectory().getAbsolutePath());
-      } else {
-        throw new RuntimeException("Can't find target: " + contextsTarget);
-      }
-
-      configFile = new File(instanceDir, "jetty-contexts.xml").getAbsolutePath();
-      out = new PrintWriter(new FileWriter(configFile));
-      out.println(buffer.toString());
-
+      jettyConfigFile = new File(instanceDir, "jetty.xml").getAbsolutePath();
+      out = new PrintWriter(new FileWriter(jettyConfigFile));
+      out.println(jettyXmlContent);
     } finally {
-      IOUtils.closeQuietly(in);
       IOUtils.closeQuietly(out);
     }
   }
@@ -243,30 +226,22 @@ public class Jetty7xAppServer extends AbstractAppServer {
     s += "  <Set name=\"contextPath\">/" + contextPath + "</Set>\n";
     s += "  <Set name=\"war\">" + warFile + "</Set>\n";
     s += "\n";
-
-    if (GenericServer.dsoEnabled() && NEW_INTEGRATION) {
-      s += "  <Property name=\"Server\">\n";
-      s += "    <Call id=\"tcIdMgr\" name=\"getAttribute\">\n";
-      s += "      <Arg>tcIdMgr</Arg>\n";
-      s += "    </Call>\n";
-      s += "  </Property>\n";
-      s += "\n";
-      s += "  <New id=\"tcmgr\" class=\"org.mortbay.terracotta.servlet.TerracottaSessionManager\">\n";
-      s += "    <Set name=\"idManager\">\n";
-      s += "      <Ref id=\"tcIdMgr\"/>\n";
-      s += "    </Set>\n";
-      s += "  </New>\n";
-      s += "\n";
-      s += "  <Set name=\"sessionHandler\">\n";
-      s += "    <New class=\"org.mortbay.terracotta.servlet.TerracottaSessionHandler\">\n";
-      s += "      <Arg><Ref id=\"tcmgr\"/></Arg>\n";
-      s += "    </New>\n";
-      s += "  </Set>\n";
-      s += "\n";
-    }
-
     s += "</Configure>\n";
     return s;
   }
 
+  private String getJettyXml() throws IOException {
+    InputStream in = null;
+    try {
+      in = Jetty7xAppServer.class.getResourceAsStream("jetty.xml");
+      List<String> lines = IOUtils.readLines(in);
+      StringBuilder content = new StringBuilder();
+      for (String line : lines) {
+        content.append(line).append("\n");
+      }
+      return content.toString();
+    } finally {
+      IOUtils.closeQuietly(in);
+    }
+  }
 }
