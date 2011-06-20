@@ -14,7 +14,7 @@
   <version>1.1.2</version>
 
   <properties>
-    <terracotta.core.version>3.5.0</terracotta.core.version>
+    <terracotta.core.version>3.5.2</terracotta.core.version>
   </properties>
 
   <dependencies>
