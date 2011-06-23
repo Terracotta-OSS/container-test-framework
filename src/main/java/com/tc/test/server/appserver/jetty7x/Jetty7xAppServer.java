@@ -177,6 +177,7 @@ public class Jetty7xAppServer extends AbstractAppServer {
     setProperties(params, jetty_port, instanceDir);
 
     createConfigFile();
+    if (!new File(jettyConfigFile).exists()) { throw new Exception("Jetty config file wasn't created properly"); }
   }
 
   private void writeContextFile(final File war, final String context) throws IOException {
