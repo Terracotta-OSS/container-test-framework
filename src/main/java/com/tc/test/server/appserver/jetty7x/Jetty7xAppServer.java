@@ -213,6 +213,7 @@ public class Jetty7xAppServer extends AbstractAppServer {
       jettyXmlContent = jettyXmlContent.replace("TC_WORKER_NAME", instanceName);
 
       jettyConfigFile = new File(instanceDir, "jetty.xml").getAbsolutePath();
+      System.out.println("XXX: jetty config file: " + jettyConfigFile);
       out = new PrintWriter(new FileWriter(jettyConfigFile));
       out.println(jettyXmlContent);
     } finally {
