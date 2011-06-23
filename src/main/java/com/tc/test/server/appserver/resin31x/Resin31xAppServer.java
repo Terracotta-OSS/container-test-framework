@@ -150,7 +150,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
       }
 
       if (!runner.isAlive()) {
-        if (configExceptionCheck(watchdogLog)) { throw new RetryException("NPE in AMXDebug"); }
+        if (configExceptionCheck(watchdogLog)) { throw new RetryException("thread-idle-max config exception"); }
         throw new RuntimeException("Runner thread finished before timeout");
       }
     }
