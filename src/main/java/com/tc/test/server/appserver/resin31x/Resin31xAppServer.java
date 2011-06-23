@@ -18,6 +18,10 @@ import com.tc.test.server.appserver.AbstractAppServer;
 import com.tc.test.server.appserver.AppServerParameters;
 import com.tc.test.server.appserver.AppServerResult;
 import com.tc.test.server.util.AppServerUtil;
+import com.tc.test.server.util.ParamsWithRetry;
+import com.tc.test.server.util.RetryException;
+import com.tc.text.Banner;
+import com.tc.util.Grep;
 import com.tc.util.PortChooser;
 
 import java.io.File;
@@ -38,6 +42,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
                                                    + File.separator + "java";
 
   private static final long   START_STOP_TIMEOUT = 240 * 1000;
+  public static final int     STARTUP_RETRIES    = 3;
 
   private String              configFile;
   private String              instanceName;
@@ -47,6 +52,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
   private int                 watchdog_port      = 0;
   private int                 cluster_port       = 0;
   private Thread              runner             = null;
+  private Process             process;
 
   public Resin31xAppServer(final Resin31xAppServerInstallation installation) {
     super(installation);
@@ -54,7 +60,25 @@ public final class Resin31xAppServer extends AbstractAppServer {
 
   public ServerResult start(final ServerParameters parameters) throws Exception {
     AppServerParameters params = (AppServerParameters) parameters;
-    return startResin(params);
+    for (int i = 0; i < STARTUP_RETRIES; i++) {
+      try {
+        return startResin(new ParamsWithRetry(params, i));
+      } catch (RetryException re) {
+        Banner.warnBanner("Re-trying server startup (" + i + ") " + re.getMessage());
+
+        if (process != null) {
+          try {
+            process.destroy();
+          } catch (Throwable t) {
+            t.printStackTrace();
+          }
+        }
+
+        continue;
+      }
+    }
+
+    throw new RuntimeException("Failed to start server in " + STARTUP_RETRIES + " attempts");
   }
 
   public void stop(final ServerParameters rawParams) throws Exception {
@@ -97,13 +121,14 @@ public final class Resin31xAppServer extends AbstractAppServer {
     cmd.add(this.instanceDir.getAbsolutePath());
     cmd.add("-verbose");
     final String[] cmdArray = (String[]) cmd.toArray(new String[] {});
-    final String nodeLogFile = new File(instanceDir + ".log").getAbsolutePath();
+    final File nodeLogFile = new File(instanceDir, "log" + File.separator + "watchdog-manager.log");
     System.err.println("Starting resin with cmd: " + cmd);
+    process = Runtime.getRuntime().exec(cmdArray, null, instanceDir);
     runner = new Thread("runner for " + instanceName) {
       @Override
       public void run() {
         try {
-          Result result = Exec.execute(cmdArray, nodeLogFile, null, instanceDir);
+          Result result = Exec.execute(cmdArray, nodeLogFile.getAbsolutePath(), null, instanceDir);
           if (result.getExitCode() != 0) {
             System.err.println(result);
           }
@@ -114,9 +139,35 @@ public final class Resin31xAppServer extends AbstractAppServer {
     };
     runner.start();
     System.err.println("Starting resin " + instanceName + " on port " + resin_port + "...");
+
+    boolean started = false;
+    long timeout = System.currentTimeMillis() + START_STOP_TIMEOUT;
+    while (System.currentTimeMillis() < timeout) {
+      if (AppServerUtil.pingPort(resin_port)) {
+        started = true;
+        break;
+      }
+
+      if (!runner.isAlive()) {
+        if (configExceptionCheck(nodeLogFile)) { throw new RetryException("NPE in AMXDebug"); }
+        throw new RuntimeException("Runner thread finished before timeout");
+      }
+    }
+
+    if (!started) { throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms"); }
+
     AppServerUtil.waitForPort(resin_port, START_STOP_TIMEOUT);
     System.err.println("Started " + instanceName + " on port " + resin_port);
     return new AppServerResult(resin_port, this);
+  }
+
+  protected static boolean configExceptionCheck(final File nodeLogFile) throws IOException {
+    // see MNK-2527
+    List<CharSequence> hits = Grep
+        .grep("^Exception in thread \"main\" com.caucho.config.ConfigException:", nodeLogFile);
+    List<CharSequence> hits2 = Grep.grep("^\tat com.caucho.util.ThreadPool.setThreadIdleMax", nodeLogFile);
+
+    return (!hits.isEmpty() && !hits2.isEmpty());
   }
 
   private void prepareDeployment(final AppServerParameters params) throws Exception {

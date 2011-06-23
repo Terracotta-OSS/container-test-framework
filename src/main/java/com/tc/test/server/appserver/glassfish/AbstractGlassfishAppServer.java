@@ -24,10 +24,10 @@ import com.tc.test.server.ServerResult;
 import com.tc.test.server.appserver.AbstractAppServer;
 import com.tc.test.server.appserver.AppServerParameters;
 import com.tc.test.server.appserver.AppServerResult;
-import com.tc.test.server.appserver.ValveDefinition;
 import com.tc.test.server.appserver.deployment.DeploymentBuilder;
 import com.tc.test.server.appserver.deployment.WARBuilder;
 import com.tc.test.server.util.AppServerUtil;
+import com.tc.test.server.util.ParamsWithRetry;
 import com.tc.test.server.util.RetryException;
 import com.tc.text.Banner;
 import com.tc.util.Assert;
@@ -44,12 +44,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -587,53 +585,6 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       }
     }
 
-  }
-
-  private static class ParamsWithRetry implements AppServerParameters {
-
-    private final AppServerParameters delegate;
-    private final int                 retryNum;
-
-    ParamsWithRetry(final AppServerParameters delegate, final int retryNum) {
-      this.delegate = delegate;
-      this.retryNum = retryNum;
-    }
-
-    public List<String> extraClasspath() {
-      return delegate.extraClasspath();
-    }
-
-    public String instanceName() {
-      return delegate.instanceName() + (retryNum == 0 ? "" : "-retry" + retryNum);
-    }
-
-    public String jvmArgs() {
-      return delegate.jvmArgs();
-    }
-
-    public Properties properties() {
-      return delegate.properties();
-    }
-
-    public Collection sars() {
-      return delegate.sars();
-    }
-
-    public Map wars() {
-      return delegate.wars();
-    }
-
-    public Collection<ValveDefinition> valves() {
-      return delegate.valves();
-    }
-
-    public Collection<String> tomcatServerJars() {
-      return delegate.tomcatServerJars();
-    }
-
-    public Map deployments() {
-      return delegate.deployments();
-    }
   }
 
 }
