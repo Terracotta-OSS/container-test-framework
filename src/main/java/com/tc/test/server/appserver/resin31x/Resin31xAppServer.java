@@ -162,11 +162,11 @@ public final class Resin31xAppServer extends AbstractAppServer {
     return new AppServerResult(resin_port, this);
   }
 
-  protected static boolean configExceptionCheck(final File nodeLogFile) throws IOException {
+  protected static boolean configExceptionCheck(final File watchdogLog) throws IOException {
     // see MNK-2527
     List<CharSequence> hits = Grep
-        .grep("^Exception in thread \"main\" com.caucho.config.ConfigException:", nodeLogFile);
-    List<CharSequence> hits2 = Grep.grep("^\tat com.caucho.util.ThreadPool.setThreadIdleMax", nodeLogFile);
+        .grep("^Exception in thread \"main\" com.caucho.config.ConfigException:", watchdogLog);
+    List<CharSequence> hits2 = Grep.grep("^\tat com.caucho.util.ThreadPool.setThreadIdleMax", watchdogLog);
 
     return (!hits.isEmpty() && !hits2.isEmpty());
   }
