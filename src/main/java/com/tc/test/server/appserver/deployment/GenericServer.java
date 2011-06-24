@@ -18,8 +18,8 @@ import org.xml.sax.SAXException;
 
 import com.meterware.httpunit.WebConversation;
 import com.meterware.httpunit.WebResponse;
-import com.tc.management.JMXConnectorProxy;
 import com.tc.test.AppServerInfo;
+import com.tc.test.JMXUtils;
 import com.tc.test.TestConfigObject;
 import com.tc.test.server.ServerResult;
 import com.tc.test.server.appserver.AppServer;
@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.management.MBeanServerConnection;
+import javax.management.remote.JMXConnector;
 
 public class GenericServer extends AbstractStoppable implements WebApplicationServer {
   private static final String               ENABLED_DSO_PROPERTY    = "tc.tests.info.appserver.dso.enabled";
@@ -303,7 +304,7 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   }
 
   public MBeanServerConnection getMBeanServerConnection() throws Exception {
-    JMXConnectorProxy jmxConnectorProxy = new JMXConnectorProxy("localhost", this.jmxRemotePort);
+    JMXConnector jmxConnectorProxy = JMXUtils.getJMXConnector("localhost", this.jmxRemotePort);
     return jmxConnectorProxy.getMBeanServerConnection();
   }
 
