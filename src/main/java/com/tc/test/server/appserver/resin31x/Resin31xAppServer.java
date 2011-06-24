@@ -131,7 +131,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
         try {
           Result result = Exec.execute(process, cmdArray, nodeLogFile, null, instanceDir);
           if (result.getExitCode() != 0) {
-            System.err.println(result);
+            System.err.println("Command failed: " + result);
           }
         } catch (Exception e) {
           e.printStackTrace();
@@ -144,12 +144,13 @@ public final class Resin31xAppServer extends AbstractAppServer {
     boolean started = false;
     long timeout = System.currentTimeMillis() + START_STOP_TIMEOUT;
     while (System.currentTimeMillis() < timeout) {
-      if (AppServerUtil.pingPort(resin_port)) {
+      if (AppServerUtil.pingPort(watchdog_port)) {
         started = true;
         break;
       }
 
       if (!runner.isAlive()) {
+        if (!watchdogLog.exists()) { throw new RetryException("watchdog log doesn't exist"); }
         if (configExceptionCheck(watchdogLog)) { throw new RetryException("thread-idle-max config exception"); }
         throw new RuntimeException("Runner thread finished before timeout");
       }
