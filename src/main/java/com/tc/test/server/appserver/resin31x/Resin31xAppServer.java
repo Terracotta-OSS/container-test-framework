@@ -149,7 +149,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
         break;
       }
 
-      if (!runner.isAlive()) {
+      if (!runner.isAlive() && process.exitValue() != 0) {
         if (!watchdogLog.exists()) { throw new RetryException("watchdog log doesn't exist"); }
         if (configExceptionCheck(watchdogLog)) { throw new RetryException("thread-idle-max config exception"); }
         throw new RuntimeException("Runner thread finished before timeout");
