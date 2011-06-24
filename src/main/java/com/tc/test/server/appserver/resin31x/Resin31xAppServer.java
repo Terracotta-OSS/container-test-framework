@@ -129,7 +129,7 @@ public final class Resin31xAppServer extends AbstractAppServer {
       @Override
       public void run() {
         try {
-          Result result = Exec.execute(cmdArray, nodeLogFile, null, instanceDir);
+          Result result = Exec.execute(process, cmdArray, nodeLogFile, null, instanceDir);
           if (result.getExitCode() != 0) {
             System.err.println(result);
           }
