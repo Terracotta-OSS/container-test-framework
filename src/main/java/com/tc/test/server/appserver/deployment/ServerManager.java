@@ -397,6 +397,12 @@ public class ServerManager {
           } else {
             throw new RuntimeException("unexpected 6.x version: " + info);
           }
+        } else if (major.equals("7")) {
+          if (minor.startsWith("0.")) {
+            aCopy.addModule(TimUtil.TOMCAT_6_0, resolveContainerTIM(TimUtil.TOMCAT_6_0));
+          } else {
+            throw new RuntimeException("unexpected 7.x version: " + info);
+          }
         } else {
           throw new RuntimeException("unexpected major version: " + info);
         }
@@ -681,6 +687,7 @@ public class ServerManager {
       mappings.put("tomcat-5.0.", "TerracottaTomcat50xSessionValve");
       mappings.put("tomcat-5.5.", "TerracottaTomcat55xSessionValve");
       mappings.put("tomcat-6.0.", "TerracottaTomcat60xSessionValve");
+      mappings.put("tomcat-7.0.", "TerracottaTomcat70xSessionValve");
       mappings.put("websphere-6.1.", "TerracottaWebsphere61xSessionFilter");
       mappings.put("websphere-7.0.", "TerracottaWebsphere70xSessionFilter");
     }

@@ -14,6 +14,7 @@ public class TimUtil {
   public static final String TOMCAT_5_0;
   public static final String TOMCAT_5_5;
   public static final String TOMCAT_6_0;
+  public static final String TOMCAT_7_0;
 
   public static final String JBOSS_3_2;
   public static final String JBOSS_4_0;
@@ -38,6 +39,7 @@ public class TimUtil {
     TOMCAT_5_0 = "tim-tomcat-5.0";
     TOMCAT_5_5 = "tim-tomcat-5.5";
     TOMCAT_6_0 = "tim-tomcat-6.0";
+    TOMCAT_7_0 = "tim-tomcat-7.0";
     JBOSS_3_2 = "tim-jboss-3.2";
     JBOSS_4_0 = "tim-jboss-4.0";
     JBOSS_4_2 = "tim-jboss-4.2";

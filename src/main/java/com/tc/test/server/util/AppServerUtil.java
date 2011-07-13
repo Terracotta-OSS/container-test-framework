@@ -26,7 +26,7 @@ public class AppServerUtil {
   private static final PortChooser      pc     = new PortChooser();
   private static final TestConfigObject config = TestConfigObject.getInstance();
 
-  public static int getPort() throws Exception {
+  public static int getPort() {
     return pc.chooseRandomPort();
   }
 

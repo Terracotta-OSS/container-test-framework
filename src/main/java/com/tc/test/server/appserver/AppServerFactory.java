@@ -20,6 +20,7 @@ import com.tc.test.server.appserver.jetty7x.Jetty7xAppServerFactory;
 import com.tc.test.server.appserver.resin31x.Resin31xAppServerFactory;
 import com.tc.test.server.appserver.tomcat5x.Tomcat5xAppServerFactory;
 import com.tc.test.server.appserver.tomcat6x.Tomcat6xAppServerFactory;
+import com.tc.test.server.appserver.tomcat7x.Tomcat7xAppServerFactory;
 import com.tc.test.server.appserver.was6x.Was6xAppServerFactory;
 import com.tc.test.server.appserver.was7x.Was7xAppServerFactory;
 import com.tc.test.server.appserver.wasce1x.Wasce1xAppServerFactory;
@@ -64,6 +65,7 @@ public abstract class AppServerFactory {
       case AppServerInfo.TOMCAT:
         if ("5".equals(majorVersion)) return new Tomcat5xAppServerFactory(new ProtectedKey());
         if ("6".equals(majorVersion)) return new Tomcat6xAppServerFactory(new ProtectedKey());
+        if ("7".equals(majorVersion)) return new Tomcat7xAppServerFactory(new ProtectedKey());
         break;
       case AppServerInfo.WEBLOGIC:
         if ("8".equals(majorVersion)) return new Weblogic8xAppServerFactory(new ProtectedKey());
