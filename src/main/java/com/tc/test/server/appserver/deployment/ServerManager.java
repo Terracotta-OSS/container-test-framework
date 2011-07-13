@@ -399,7 +399,7 @@ public class ServerManager {
           }
         } else if (major.equals("7")) {
           if (minor.startsWith("0.")) {
-            aCopy.addModule(TimUtil.TOMCAT_6_0, resolveContainerTIM(TimUtil.TOMCAT_6_0));
+            aCopy.addModule(TimUtil.TOMCAT_7_0, resolveContainerTIM(TimUtil.TOMCAT_7_0));
           } else {
             throw new RuntimeException("unexpected 7.x version: " + info);
           }
