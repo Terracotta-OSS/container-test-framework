@@ -103,10 +103,7 @@ public class WARBuilder implements DeploymentBuilder {
 
     FileSystemPath warFile = makeWARFileName();
     logger.debug("Creating war file: " + warFile);
-    if (warFile.getFile().exists()) {
-      logger.info("WAR " + warFile + " already exists...skipping");
-      return new WARDeployment(warFile, clustered);
-    }
+    warFile.delete();
 
     War warTask = makeWarTask();
     warTask.setUpdate(false);
