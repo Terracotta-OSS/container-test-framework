@@ -103,7 +103,10 @@ public class WARBuilder implements DeploymentBuilder {
 
     FileSystemPath warFile = makeWARFileName();
     logger.debug("Creating war file: " + warFile);
-    warFile.delete();
+    if (warFile.getFile().exists()) {
+      logger.info("WAR " + warFile + " already exists...skipping");
+      return new WARDeployment(warFile, clustered);
+    }
 
     War warTask = makeWarTask();
     warTask.setUpdate(false);
@@ -125,10 +128,8 @@ public class WARBuilder implements DeploymentBuilder {
     addLibs(warTask);
     addResources(warTask);
     warTask.execute();
-    // warDirectoryPath.delete();
 
-    Deployment deployment = new WARDeployment(warFile, clustered);
-    return deployment;
+    return new WARDeployment(warFile, clustered);
   }
 
   public boolean isClustered() {
