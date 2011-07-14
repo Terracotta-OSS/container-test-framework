@@ -73,9 +73,12 @@ public class TomcatStartupActions {
           Deployment deployment = deployments.get(appContext);
           Assert.assertNotNull(deployment);
 
-          // handle HttpOnly, we want it off by default so httpunit will work but Tomcat 7 has it on
-          String useHttpOnly = deployment.properties().getProperty("useHttpOnly", "false");
-          ((Element) context).setAttribute("useHttpOnly", useHttpOnly);
+          AppServerInfo appServerInfo = TestConfigObject.getInstance().appServerInfo();
+          if (Integer.valueOf(appServerInfo.getMajor()) == 7) {
+            // handle HttpOnly, we want it off by default so httpunit will work but Tomcat 7 has it on
+            String useHttpOnly = deployment.properties().getProperty("useHttpOnly", "false");
+            ((Element) context).setAttribute("useHttpOnly", useHttpOnly);
+          }
 
           for (ValveDefinition def : valves) {
             // don't write out express valve if it's not clustered
