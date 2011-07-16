@@ -56,48 +56,51 @@ public class TomcatStartupActions {
   private static void modifyConfig0(AppServerParameters params, InstalledLocalContainer container, int catalinaPropsLine)
       throws Exception {
     try {
-      // add Vavles (if defined)
       Collection<ValveDefinition> valves = params.valves();
-      if (!valves.isEmpty()) {
+      File serverXml = new File(container.getConfiguration().getHome(), "conf/server.xml");
+      Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(serverXml);
 
-        File serverXml = new File(container.getConfiguration().getHome(), "conf/server.xml");
-        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(serverXml);
+      Map<String, Deployment> deployments = params.deployments();
+      NodeList contexts = doc.getElementsByTagName("Context");
+      File webApps = new File(container.getConfiguration().getHome(), "webapps");
 
-        Map<String, Deployment> deployments = params.deployments();
-        NodeList contexts = doc.getElementsByTagName("Context");
-        for (int i = 0, n = contexts.getLength(); i < n; i++) {
-          Node context = contexts.item(i);
-          String contextPath = context.getAttributes().getNamedItem("path").getNodeValue();
-          // remove leading /
-          String appContext = contextPath.substring(1);
-          Deployment deployment = deployments.get(appContext);
-          Assert.assertNotNull(deployment);
+      for (int i = 0, n = contexts.getLength(); i < n; i++) {
+        Node context = contexts.item(i);
+        String contextPath = context.getAttributes().getNamedItem("path").getNodeValue();
+        // remove leading /
+        String appContext = contextPath.substring(1);
+        Deployment deployment = deployments.get(appContext);
+        Assert.assertNotNull(deployment);
 
-          AppServerInfo appServerInfo = TestConfigObject.getInstance().appServerInfo();
-          if (Integer.valueOf(appServerInfo.getMajor()) == 7) {
-            // handle HttpOnly, we want it off by default so httpunit will work but Tomcat 7 has it on
-            String useHttpOnly = deployment.properties().getProperty("useHttpOnly", "false");
-            ((Element) context).setAttribute("useHttpOnly", useHttpOnly);
-          }
+        AppServerInfo appServerInfo = TestConfigObject.getInstance().appServerInfo();
+        if (Integer.valueOf(appServerInfo.getMajor()) == 7) {
+          // handle HttpOnly, we want it off by default so httpunit will work but Tomcat 7 has it on
+          String useHttpOnly = deployment.properties().getProperty("useHttpOnly", "false");
+          ((Element) context).setAttribute("useHttpOnly", useHttpOnly);
 
-          for (ValveDefinition def : valves) {
-            // don't write out express valve if it's not clustered
-            if (def.isExpressVal() && !deployment.isClustered()) {
-              continue;
-            }
-            Element valve = doc.createElement("Valve");
-            for (Entry<String, String> attr : def.getAttributes().entrySet()) {
-              valve.setAttribute(attr.getKey(), attr.getValue());
-            }
-
-            context.appendChild(valve);
-          }
+          // tomcat 7 won't unpack the war if docBase is not relative to webapps
+          File docBase = new File(context.getAttributes().getNamedItem("docBase").getNodeValue());
+          FileUtils.copyFileToDirectory(docBase, webApps);
+          ((Element) context).setAttribute("docBase", docBase.getName());
         }
 
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.transform(new DOMSource(doc), new StreamResult(serverXml));
+        for (ValveDefinition def : valves) {
+          // don't write out express valve if it's not clustered
+          if (def.isExpressVal() && !deployment.isClustered()) {
+            continue;
+          }
+          Element valve = doc.createElement("Valve");
+          for (Entry<String, String> attr : def.getAttributes().entrySet()) {
+            valve.setAttribute(attr.getKey(), attr.getValue());
+          }
+
+          context.appendChild(valve);
+        }
       }
+
+      TransformerFactory transformerFactory = TransformerFactory.newInstance();
+      Transformer transformer = transformerFactory.newTransformer();
+      transformer.transform(new DOMSource(doc), new StreamResult(serverXml));
 
       // add in custom server jars
       Collection<String> tomcatServerJars = params.tomcatServerJars();
