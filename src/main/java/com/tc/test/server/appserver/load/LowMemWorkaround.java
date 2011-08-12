@@ -35,7 +35,9 @@ public class LowMemWorkaround {
 
   private static long getMem() {
     try {
-      Sigar sigar = SigarUtil.newSigar();
+      SigarUtil.sigarInit();
+      Sigar sigar = new Sigar();
+
       Mem mem = sigar.getMem();
       return mem.getTotal();
     } catch (SigarException se) {
