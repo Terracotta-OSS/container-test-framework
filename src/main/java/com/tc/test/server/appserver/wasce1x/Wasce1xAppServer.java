@@ -157,7 +157,7 @@ public final class Wasce1xAppServer extends AbstractAppServer {
     };
     t.start();
     waitForStartup(port); // blocking
-    deployWars(params.wars());
+    deployWars(params.deployables());
 
     return new AppServerResult(port, this);
   }

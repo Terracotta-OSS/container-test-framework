@@ -179,17 +179,22 @@ public final class Resin31xAppServer extends AbstractAppServer {
     ensureDirectory(getConfDirectory());
 
     File webapps_dir = getWebappsDirectory();
+    File deploy_dir = getDeployDirectory();
     ensureDirectory(webapps_dir);
 
     // move wars into the correct location
-    Map wars = params.wars();
-    if (wars != null && wars.size() > 0) {
-      Set war_entries = wars.entrySet();
-      Iterator war_entries_it = war_entries.iterator();
-      while (war_entries_it.hasNext()) {
-        Map.Entry war_entry = (Map.Entry) war_entries_it.next();
-        File war_file = (File) war_entry.getValue();
-        FileUtils.copyFileToDirectory(war_file, webapps_dir);
+    Map deployables = params.deployables();
+    if (deployables != null && deployables.size() > 0) {
+      Set entries = deployables.entrySet();
+      Iterator it = entries.iterator();
+      while (it.hasNext()) {
+        Map.Entry war_entry = (Map.Entry) it.next();
+        File deployableFile = (File) war_entry.getValue();
+        if (deployableFile.getName().endsWith("war")) {
+          FileUtils.copyFileToDirectory(deployableFile, webapps_dir);
+        } else {
+          FileUtils.copyFileToDirectory(deployableFile, deploy_dir);
+        }
       }
     }
 
@@ -210,6 +215,10 @@ public final class Resin31xAppServer extends AbstractAppServer {
 
   private File getWebappsDirectory() {
     return new File(instanceDir, "webapps");
+  }
+
+  private File getDeployDirectory() {
+    return new File(instanceDir, "deploy");
   }
 
   private File getConfDirectory() {

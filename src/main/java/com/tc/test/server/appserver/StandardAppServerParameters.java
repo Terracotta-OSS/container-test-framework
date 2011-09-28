@@ -72,12 +72,12 @@ public class StandardAppServerParameters implements AppServerParameters {
     extraClassPath.add(classpathVar);
   }
 
-  public final Map<String, File> wars() {
-    Map<String, File> wars = new HashMap<String, File>();
+  public final Map<String, File> deployables() {
+    Map<String, File> deployables = new HashMap<String, File>();
     for (Map.Entry<String, Deployment> e : deployments.entrySet()) {
-      wars.put(e.getKey(), e.getValue().getFileSystemPath().getFile());
+      deployables.put(e.getKey(), e.getValue().getFileSystemPath().getFile());
     }
-    return wars;
+    return deployables;
   }
 
   public Map<String, Deployment> deployments() {

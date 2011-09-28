@@ -313,6 +313,11 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
     return this;
   }
 
+  public WebApplicationServer addEarDeployment(final Deployment earDeployment) {
+    parameters.addDeployment("", earDeployment);
+    return this;
+  }
+
   @Override
   protected void doStart() throws Exception {
     try {

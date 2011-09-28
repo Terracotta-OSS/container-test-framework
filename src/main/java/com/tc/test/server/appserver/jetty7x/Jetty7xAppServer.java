@@ -150,7 +150,7 @@ public class Jetty7xAppServer extends AbstractAppServer {
     ensureDirectory(wars_dir);
 
     // move wars into the correct location
-    Map wars = params.wars();
+    Map wars = params.deployables();
     if (wars != null && wars.size() > 0) {
 
       Set war_entries = wars.entrySet();

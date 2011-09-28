@@ -242,7 +242,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     waitForAppInstanceRunning(params);
 
-    deployWars(nodeLogFile, params.wars());
+    deployWars(nodeLogFile, params.deployables());
 
     waitForPing(nodeLogFile);
 

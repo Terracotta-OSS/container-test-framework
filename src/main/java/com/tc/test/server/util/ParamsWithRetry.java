@@ -41,8 +41,8 @@ public class ParamsWithRetry implements AppServerParameters {
     return delegate.sars();
   }
 
-  public Map wars() {
-    return delegate.wars();
+  public Map deployables() {
+    return delegate.deployables();
   }
 
   public Collection<ValveDefinition> valves() {

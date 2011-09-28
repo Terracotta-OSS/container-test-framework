@@ -10,6 +10,7 @@ import org.codehaus.cargo.container.InstalledLocalContainer;
 import org.codehaus.cargo.container.State;
 import org.codehaus.cargo.container.configuration.ConfigurationType;
 import org.codehaus.cargo.container.configuration.LocalConfiguration;
+import org.codehaus.cargo.container.deployable.EAR;
 import org.codehaus.cargo.container.deployable.WAR;
 import org.codehaus.cargo.container.property.GeneralPropertySet;
 import org.codehaus.cargo.container.property.ServletPropertySet;
@@ -74,7 +75,7 @@ public abstract class CargoAppServer extends AbstractAppServer {
     config.setProperty(ServletPropertySet.PORT, Integer.toString(port));
     config.setProperty(GeneralPropertySet.JVMARGS, params.jvmArgs());
     config.setProperty(GeneralPropertySet.LOGGING, "low");
-    addWars(config, params.wars(), params.instanceName());
+    addDeployables(config, params.deployables(), params.instanceName());
 
     container = container(config, params);
     container.setTimeout(Integer.valueOf(params.properties().getProperty(StandardAppServerParameters.START_TIMEOUT,
@@ -115,17 +116,25 @@ public abstract class CargoAppServer extends AbstractAppServer {
     }
   }
 
-  private void addWars(final LocalConfiguration config, final Map wars, final String instanceName) {
-    WAR warapp = null;
+  private void addDeployables(final LocalConfiguration config, final Map wars, final String instanceName) {
     for (Iterator it = wars.entrySet().iterator(); it.hasNext();) {
       Map.Entry entry = (Entry) it.next();
       String context = (String) entry.getKey();
-      File warFile = (File) entry.getValue();
-      System.out.println("WAR: " + warFile);
-      warapp = new WAR(warFile.getPath());
-      warapp.setContext(context);
-      warapp.setLogger(new ConsoleLogger(instanceName));
-      config.addDeployable(warapp);
+      File deployableFile = (File) entry.getValue();
+      System.out.println("Deployable: " + deployableFile);
+      if (deployableFile.getName().endsWith("war")) {
+        WAR deployable = new WAR(deployableFile.getPath());
+        deployable.setContext(context);
+        deployable.setLogger(new ConsoleLogger(instanceName));
+        config.addDeployable(deployable);
+      } else if (deployableFile.getName().endsWith("ear")) {
+        EAR deployable = new EAR(deployableFile.getPath());
+        deployable.setLogger(new ConsoleLogger(instanceName));
+        config.addDeployable(deployable);
+      } else {
+        throw new RuntimeException("Unknown deployable: " + deployableFile);
+      }
+
     }
   }
 

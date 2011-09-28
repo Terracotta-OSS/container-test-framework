@@ -18,7 +18,7 @@ import java.util.Properties;
  */
 public interface AppServerParameters extends ServerParameters {
 
-  Map<String, File> wars();
+  Map<String, File> deployables();
   
   Map<String, Deployment> deployments();
 

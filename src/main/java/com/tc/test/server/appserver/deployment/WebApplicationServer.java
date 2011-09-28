@@ -20,6 +20,8 @@ public interface WebApplicationServer extends Server {
 
   public WebApplicationServer addWarDeployment(Deployment warDeployment, String context);
 
+  public WebApplicationServer addEarDeployment(Deployment earDeployment);
+
   public WebResponse ping(String url) throws MalformedURLException, IOException, SAXException;
 
   public WebResponse ping(String url, WebConversation wc) throws MalformedURLException, IOException, SAXException;
@@ -27,6 +29,6 @@ public interface WebApplicationServer extends Server {
   public int getPort();
 
   public File getWorkingDirectory();
-  
+
   public File getTcConfigFile();
 }

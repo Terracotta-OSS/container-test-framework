@@ -610,9 +610,9 @@ public class WARBuilder implements DeploymentBuilder {
     return this;
   }
 
-  private FileSystemPath getResourceDirPath(String location, String includes) {
+  public static FileSystemPath getResourceDirPath(String location, String includes) {
     String resource = location + "/" + includes;
-    URL url = getClass().getResource(resource);
+    URL url = WARBuilder.class.getResource(resource);
     Assert.assertNotNull("Not found: " + resource, url);
     FileSystemPath path = calculateDirectory(url, includes);
     return path;
