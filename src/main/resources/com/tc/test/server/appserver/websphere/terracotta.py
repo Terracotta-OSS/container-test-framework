@@ -71,10 +71,20 @@ class AppUtil:
             else:
                 print "WebApp[" + warFile + "] is already installed"
 
+        earFiles = filter(lambda x: len(x) > 4 and string.rfind(x, ".ear") == len(x) - 4, os.listdir(self.webappDir))
+        print "Installing EARs..."
+        for earFile in earFiles:
+            print "Installing EAR " + earFile
+            self.installEar(earFile)     
+
     def install(self, warFile):
         appName = self.appName(warFile)
         self.AdminApp.install(os.path.join(self.webappDir, warFile), "-appname " + appName + " -contextroot " + appName + " -usedefaultbindings")
         print "WebApp[" + appName + "] installed"
+
+    def installEar(self, earFile):
+        self.AdminApp.install(os.path.join(self.webappDir, earFile), "[-usedefaultbindings -deployws]")
+        print "WebApp[" + earFile + "] installed"        
 
     def installed(self, appName):
         return operator.contains(string.split(self.AdminApp.list()), appName)

@@ -74,7 +74,7 @@ public class WebsphereAppServer extends AbstractAppServer {
     deleteProfileIfExists();
     createProfile();
     verifyProfile();
-    deployWarFile();
+    deployWebapps();
     addTerracottaToServerPolicy();
     enableDSO();
     if (extraScript != null) {
@@ -199,7 +199,7 @@ public class WebsphereAppServer extends AbstractAppServer {
     String defaultTemplate = new File(serverInstallDir.getAbsolutePath(), "profileTemplates/default").getAbsolutePath();
     String[] args = new String[] { "-create", "-templatePath", defaultTemplate, "-profileName", instanceName,
         "-profilePath", instanceDir.getAbsolutePath(), "-portsFile", portDefFile.getAbsolutePath(),
-        "-enableAdminSecurity", "false", "-isDeveloperServer" };
+        "-enableAdminSecurity", "false" }; // , "-isDeveloperServer"
     System.out.println("Creating profile for instance " + instanceName + "...");
     long start = System.currentTimeMillis();
     executeCommand(serverInstallDir, "manageprofiles", args, serverInstallDir, "Error in creating profile for "
@@ -275,7 +275,7 @@ public class WebsphereAppServer extends AbstractAppServer {
     }
   }
 
-  private void deployWarFile() throws Exception {
+  private void deployWebapps() throws Exception {
     String[] args = new String[] { "-lang", "jython", "-connType", "NONE", "-profileName", instanceName, "-f",
         new File(pyScriptsDir, DEPLOY_APPS_PY).getAbsolutePath(), warDir.getAbsolutePath().replace('\\', '/') };
     System.out.println("Deploying war file in: " + warDir);
