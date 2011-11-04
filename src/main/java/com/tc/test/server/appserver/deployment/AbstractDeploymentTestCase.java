@@ -17,7 +17,6 @@ import com.tc.util.TcConfigBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -179,7 +178,7 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   void disableAllTests() {
-    this.disableAllUntil(new Date(Long.MAX_VALUE));
+    disableTest();
   }
 
   private boolean shouldDisableForVariants() {
