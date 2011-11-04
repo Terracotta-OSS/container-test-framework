@@ -179,7 +179,7 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   void disableAllTests() {
-    this.disableAllUntil(new Date(Long.MAX_VALUE));
+    this.disableTest();
   }
 
   private boolean shouldDisableForVariants() {
