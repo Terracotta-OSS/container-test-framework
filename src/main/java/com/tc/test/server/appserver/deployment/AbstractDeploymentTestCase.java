@@ -10,14 +10,12 @@ import org.apache.commons.logging.LogFactory;
 import com.tc.test.AppServerInfo;
 import com.tc.test.TCTestCase;
 import com.tc.test.TestConfigObject;
-import com.tc.test.server.appserver.load.LowMemWorkaround;
 import com.tc.text.Banner;
 import com.tc.util.TcConfigBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,13 +47,11 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   public boolean shouldDisable() {
-    if (LowMemWorkaround.lessThan2Gb()) { return true; }
-    
-    if (!TestConfigObject.getInstance().transparentTestsMode().equals(TestConfigObject.TRANSPARENT_TESTS_MODE_NORMAL)) { 
+    if (!TestConfigObject.getInstance().transparentTestsMode().equals(TestConfigObject.TRANSPARENT_TESTS_MODE_NORMAL)) {
       Banner.warnBanner("NOT RUNNNING TEST BECAUSE TEST MODE IS NOT 'normal'");
-      return true; 
+      return true;
     }
-    
+
     return shouldBeSkipped() || isAllDisabled() || shouldDisableForJavaVersion() || shouldDisableForVariants()
            || (isExpressMode() && !canRunExpressMode());
   }

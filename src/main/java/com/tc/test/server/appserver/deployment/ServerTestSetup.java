@@ -6,7 +6,6 @@ package com.tc.test.server.appserver.deployment;
 
 import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
-import com.tc.test.server.appserver.load.LowMemWorkaround;
 import com.tc.text.Banner;
 import com.tc.util.TcConfigBuilder;
 
@@ -78,27 +77,22 @@ public class ServerTestSetup extends TestSetup {
   public DeploymentBuilder makeDeploymentBuilder(String warFileName) {
     return getServerManager().makeDeploymentBuilder(warFileName);
   }
-  
+
   public DeploymentBuilder makeDeploymentBuilder(String warFileName, boolean addExpressConfig) {
     return getServerManager().makeDeploymentBuilder(warFileName, addExpressConfig);
   }
-  
+
   protected boolean isWithPersistentStore() {
     // override if you please
     return false;
   }
 
   public boolean shouldDisable() {
-    if (LowMemWorkaround.lessThan2Gb()) {
-      Banner.warnBanner("NOT RUNNNING TEST SINCE THIS MACHINE DOES NOT HAVE AT LEAST 2GB MEMORY");
+    if (!TestConfigObject.getInstance().transparentTestsMode().equals(TestConfigObject.TRANSPARENT_TESTS_MODE_NORMAL)) {
+      Banner.warnBanner("NOT RUNNNING TEST BECAUSE TEST MODE IS NOT 'normal'");
       return true;
     }
-    
-    if (!TestConfigObject.getInstance().transparentTestsMode().equals(TestConfigObject.TRANSPARENT_TESTS_MODE_NORMAL)) { 
-      Banner.warnBanner("NOT RUNNNING TEST BECAUSE TEST MODE IS NOT 'normal'");
-      return true; 
-    }
-    
+
     for (Enumeration e = ((TestSuite) fTest).tests(); e.hasMoreElements();) {
       Object o = e.nextElement();
       if (o instanceof AbstractDeploymentTestCase && ((AbstractDeploymentTestCase) o).shouldDisable()) { return true; }
