@@ -202,8 +202,16 @@ public class WebsphereAppServer extends AbstractAppServer {
         "-enableAdminSecurity", "false", "-isDeveloperServer" };
     System.out.println("Creating profile for instance " + instanceName + "...");
     long start = System.currentTimeMillis();
-    executeCommand(serverInstallDir, "manageprofiles", args, serverInstallDir, "Error in creating profile for "
-                                                                               + instanceName);
+    String output = executeCommand(serverInstallDir, "manageprofiles", args, serverInstallDir,
+                                   "Error in creating profile for " + instanceName);
+
+    // there's still a chance websphere misreports profile doesn't exist, we try deleting it and recreate one more time
+    if (output.contains("is already in use. Specify another name")) {
+      deleteProfile();
+      executeCommand(serverInstallDir, "manageprofiles", args, serverInstallDir, "Error in creating profile for "
+                                                                                 + instanceName);
+    }
+
     long elapsedMillis = System.currentTimeMillis() - start;
     long elapsedSeconds = elapsedMillis / 1000;
     Long elapsedMinutes = new Long(elapsedSeconds / 60);
