@@ -149,14 +149,20 @@ public final class Resin31xAppServer extends AbstractAppServer {
         break;
       }
 
-      if (!runner.isAlive() && process.exitValue() != 0) {
-        if (!watchdogLog.exists()) { throw new RetryException("watchdog log doesn't exist"); }
-        if (configExceptionCheck(watchdogLog)) { throw new RetryException("thread-idle-max config exception"); }
-        throw new RuntimeException("Runner thread finished before timeout");
+      if (watchdogLog.exists() && configExceptionCheck(watchdogLog)) {
+        process.destroy();
+        runner.join(5 * 1000L);
+        throw new RetryException("thread-idle-max config exception");
       }
     }
 
-    if (!started) { throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms"); }
+    if (!started) {
+      process.destroy();
+      runner.join(5 * 1000L);
+      if (!watchdogLog.exists()) throw new RetryException("watchdog log doesn't exist");
+      if (configExceptionCheck(watchdogLog)) throw new RetryException("thread-idle-max config exception");
+      throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms");
+    }
 
     AppServerUtil.waitForPort(resin_port, START_STOP_TIMEOUT);
     System.err.println("Started " + instanceName + " on port " + resin_port);
@@ -165,9 +171,8 @@ public final class Resin31xAppServer extends AbstractAppServer {
 
   protected static boolean configExceptionCheck(final File watchdogLog) throws IOException {
     // see MNK-2527
-    List<CharSequence> hits = Grep
-        .grep("^Exception in thread \"main\" com.caucho.config.ConfigException:", watchdogLog);
-    List<CharSequence> hits2 = Grep.grep("^\tat com.caucho.util.ThreadPool.setThreadIdleMax", watchdogLog);
+    List<CharSequence> hits = Grep.grep("com.caucho.config.ConfigException:", watchdogLog);
+    List<CharSequence> hits2 = Grep.grep("at com.caucho.util.ThreadPool.setThreadIdleMax", watchdogLog);
 
     return (!hits.isEmpty() && !hits2.isEmpty());
   }
