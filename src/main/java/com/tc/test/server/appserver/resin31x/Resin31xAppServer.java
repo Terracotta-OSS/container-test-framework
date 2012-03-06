@@ -143,25 +143,28 @@ public final class Resin31xAppServer extends AbstractAppServer {
 
     boolean started = false;
     long timeout = System.currentTimeMillis() + START_STOP_TIMEOUT;
-    while (System.currentTimeMillis() < timeout) {
-      if (AppServerUtil.pingPort(watchdog_port)) {
-        started = true;
-        break;
+    try {
+
+      while (System.currentTimeMillis() < timeout) {
+        if (AppServerUtil.pingPort(watchdog_port)) {
+          started = true;
+          break;
+        }
+
+        if (watchdogLog.exists() && configExceptionCheck(watchdogLog)) { throw new RetryException(
+                                                                                                  "thread-idle-max config exception"); }
       }
 
-      if (watchdogLog.exists() && configExceptionCheck(watchdogLog)) {
+      if (!started) {
+        if (!watchdogLog.exists()) throw new RetryException("watchdog log doesn't exist");
+        if (configExceptionCheck(watchdogLog)) throw new RetryException("thread-idle-max config exception");
+        throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms");
+      }
+    } finally {
+      if (!started) {
         process.destroy();
         runner.join(5 * 1000L);
-        throw new RetryException("thread-idle-max config exception");
       }
-    }
-
-    if (!started) {
-      process.destroy();
-      runner.join(5 * 1000L);
-      if (!watchdogLog.exists()) throw new RetryException("watchdog log doesn't exist");
-      if (configExceptionCheck(watchdogLog)) throw new RetryException("thread-idle-max config exception");
-      throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms");
     }
 
     AppServerUtil.waitForPort(resin_port, START_STOP_TIMEOUT);
@@ -171,10 +174,10 @@ public final class Resin31xAppServer extends AbstractAppServer {
 
   protected static boolean configExceptionCheck(final File watchdogLog) throws IOException {
     // see MNK-2527
-    List<CharSequence> hits = Grep.grep("com.caucho.config.ConfigException:", watchdogLog);
-    List<CharSequence> hits2 = Grep.grep("at com.caucho.util.ThreadPool.setThreadIdleMax", watchdogLog);
+    List<CharSequence> hit1 = Grep.grep("at com.caucho.util.ThreadPool.setThreadIdleMin", watchdogLog);
+    List<CharSequence> hit2 = Grep.grep("at com.caucho.util.ThreadPool.setThreadIdleMax", watchdogLog);
 
-    return (!hits.isEmpty() && !hits2.isEmpty());
+    return (!hit1.isEmpty() || !hit2.isEmpty());
   }
 
   private void prepareDeployment(final AppServerParameters params) throws Exception {
