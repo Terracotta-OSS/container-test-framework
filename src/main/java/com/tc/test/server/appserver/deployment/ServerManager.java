@@ -583,6 +583,10 @@ public class ServerManager {
     return appId == AppServerInfo.WEBLOGIC || appId == AppServerInfo.JETTY || appId == AppServerInfo.WEBSPHERE;
   }
 
+  private boolean isJboss7x() {
+    return (config.appServerId() == AppServerInfo.JBOSS && config.appServerInfo().getMajor().equals("7"));
+  }
+
   private Map<String, String> getConfigAttributes() {
     Map<String, String> attrs = new HashMap();
     attrs.put("tcConfigUrl", getTcConfigUrl());
@@ -648,6 +652,18 @@ public class ServerManager {
     }
 
     builder.addFileAsResource(makeJbossContextXml(config.appServerInfo()), "WEB-INF");
+    
+    // special additional rules for jboss7x
+    if (isJboss7x()) {
+      System.err.println("Doing some specific setup for Jboss7");
+      try {
+        builder.addDirectoryOrJARContainingClass(Class.forName(EXPRESS_MODE_LOAD_CLASS));
+        builder.addDirectoryOrJARContainingClass(Class.forName(EXPRESS_RUNTIME_LOAD_CLASS));
+      } catch (ClassNotFoundException e1) {
+        throw new RuntimeException(e1);
+      }
+      builder.addFileAsResource(makeJbossWebXml(config.appServerInfo()), "WEB-INF");
+    }
   }
 
   private File makeJbossContextXml(AppServerInfo appServerInfo) {
@@ -670,6 +686,34 @@ public class ServerManager {
     return tmp;
   }
 
+  private File makeJbossWebXml(AppServerInfo appServerInfo) {
+    File tmp = new File(this.sandbox, "jboss-web.xml");
+    String xml = "";
+    xml += "<jboss-web>\n";
+    xml += "  <valve>\n";
+    xml += "    <class-name>org.terracotta.session.TerracottaJboss7xSessionValve</class-name>\n";
+    for (Entry<String, String> attr : getConfigAttributes().entrySet()) {
+      xml += "    <param>\n";
+      xml += "      <param-name>" + attr.getKey() + "</param-name>\n";
+      xml += "      <param-value>" + attr.getValue() + "</param-value>\n";
+      xml += "    </param>\n";
+    }
+    xml += "  </valve>\n";
+    xml += "</jboss-web>\n";
+
+    FileOutputStream out = null;
+    try {
+      out = new FileOutputStream(tmp);
+      out.write(xml.getBytes());
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    } finally {
+      IOUtils.closeQuietly(out);
+    }
+
+    return tmp;
+  }
+
   private static class Mappings {
     private static final Map<String, String> mappings = new HashMap<String, String>();
 
@@ -678,6 +722,7 @@ public class ServerManager {
       mappings.put("jboss-4.2.", "TerracottaJboss42xSessionValve");
       mappings.put("jboss-5.1.", "TerracottaJboss51xSessionValve");
       mappings.put("jboss-6.0.", "TerracottaJboss60xSessionValve");
+      mappings.put("jboss-7.1.", "TerracottaJboss7xSessionValve");
       mappings.put("weblogic-9.", "TerracottaWeblogic9xSessionFilter");
       mappings.put("weblogic-10.", "TerracottaWeblogic10xSessionFilter");
       mappings.put("jetty-6.1.", "TerracottaJetty61xSessionFilter");
