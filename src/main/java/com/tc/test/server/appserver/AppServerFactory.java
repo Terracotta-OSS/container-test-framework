@@ -87,7 +87,8 @@ public abstract class AppServerFactory {
                                                                                                             new ProtectedKey()); }
         if ("6".equals(majorVersion) && minorVersion.startsWith("0")) { return new JBoss6xAppServerFactory(
                                                                                                            new ProtectedKey()); }
-        if ("7".equals(majorVersion) && minorVersion.startsWith("1")) { return new JBoss7xAppServerFactory(); }
+        if ("7".equals(majorVersion) && minorVersion.startsWith("1")) { return new JBoss7xAppServerFactory(
+                                                                                                           new ProtectedKey()); }
         break;
       case AppServerInfo.GLASSFISH:
         if ("v1".equals(majorVersion)) return new GlassfishV1AppServerFactory(new ProtectedKey());

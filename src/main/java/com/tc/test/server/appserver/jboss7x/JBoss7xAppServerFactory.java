@@ -20,6 +20,10 @@ import java.util.Properties;
  */
 public final class JBoss7xAppServerFactory extends AppServerFactory {
 
+  public JBoss7xAppServerFactory(ProtectedKey protectedKey) {
+    super(protectedKey);
+  }
+
   @Override
   public AppServerParameters createParameters(String instanceName, Properties props) {
     return new StandardAppServerParameters(instanceName, props);
