@@ -28,7 +28,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -70,7 +69,6 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     admin_port = portMap.get("management-native").getPortNumber();
 
     deployWars(params.deployables());
-    copyServerLib(params.tomcatServerJars());
 
     System.err.println("Starting jboss7 " + instanceName + " on port " + start_port + "...");
 
@@ -113,7 +111,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     };
     runner.start();
     AppServerUtil.waitForPort(start_port, START_STOP_TIMEOUT);
-    deployStartupMonitorWar(params);
+    deployStartupMonitorWar();
     waitUntilWarsDeployed(START_STOP_TIMEOUT);
     System.err.println("Started " + instanceName + " on port " + start_port);
     return new AppServerResult(start_port, this);
@@ -217,7 +215,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     }
   }
 
-  private void deployStartupMonitorWar(StandardAppServerParameters params) throws Exception {
+  private void deployStartupMonitorWar() throws Exception {
     WARBuilder builder = new WARBuilder(STARTUP_MONITOR_CONTEXT + ".war", new File(this.sandboxDirectory(), "war"));
     builder.addServlet("ok", "/*", OkServlet.class, new HashMap(), true);
     Deployment deployment = builder.makeDeployment();
@@ -237,14 +235,6 @@ public final class JBoss7xAppServer extends AbstractAppServer {
       } else {
         Thread.sleep(500L);
       }
-    }
-  }
-
-  // I'm not entirely sure this needs to be here
-  private void copyServerLib(Collection<String> tomcatServerJars) throws IOException {
-    File serverLib = new File(instanceDir, "lib");
-    for (String jar : tomcatServerJars) {
-      FileUtils.copyFileToDirectory(new File(jar), serverLib);
     }
   }
 
