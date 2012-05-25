@@ -64,6 +64,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     instanceDir = createInstance(params);
     createInstanceDir();
 
+    setJVMRoute();
     configurePorts();
     start_port = portMap.get("http").getPortNumber();
     admin_port = portMap.get("management-native").getPortNumber();
@@ -139,6 +140,17 @@ public final class JBoss7xAppServer extends AbstractAppServer {
         System.err.println("Stopped instance on port " + start_port);
       }
     }
+  }
+
+  /*
+   * Set the jvmroute in the standalone.xml config as per <subsystem xmlns="urn:jboss:domain:web:1.1"...
+   * instance-id="{jvmroute}">
+   */
+  private void setJVMRoute() throws IOException {
+    List<ReplaceLine.Token> tokens = new ArrayList<ReplaceLine.Token>();
+    tokens.add(new ReplaceLine.Token(256, "(>)", " instance-id=\"" + instanceName + "\">"));
+    File dest = new File(instanceDir, "configuration/standalone.xml");
+    ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
   }
 
   /*
