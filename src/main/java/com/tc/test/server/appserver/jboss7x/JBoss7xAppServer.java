@@ -6,8 +6,6 @@ package com.tc.test.server.appserver.jboss7x;
 
 import org.apache.commons.io.FileUtils;
 
-import com.meterware.httpunit.WebConversation;
-import com.meterware.httpunit.WebResponse;
 import com.tc.process.Exec;
 import com.tc.process.Exec.Result;
 import com.tc.test.server.ServerParameters;
@@ -15,8 +13,6 @@ import com.tc.test.server.ServerResult;
 import com.tc.test.server.appserver.AbstractAppServer;
 import com.tc.test.server.appserver.AppServerResult;
 import com.tc.test.server.appserver.StandardAppServerParameters;
-import com.tc.test.server.appserver.deployment.Deployment;
-import com.tc.test.server.appserver.deployment.WARBuilder;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.text.Banner;
 import com.tc.util.PortChooser;
@@ -24,6 +20,7 @@ import com.tc.util.ReplaceLine;
 import com.tc.util.runtime.Os;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,19 +36,18 @@ import java.util.Set;
  */
 public final class JBoss7xAppServer extends AbstractAppServer {
 
-  private static final long               START_STOP_TIMEOUT      = 240 * 1000;                       // 4 minutes
-  private static final String             STARTUP_MONITOR_CONTEXT = "STARTWATCH";
+  private static final long               START_STOP_TIMEOUT = 240 * 1000;                     // 4 minutes
 
-  private static final String             JAVA_CMD                = System.getProperty("java.home") + File.separator
-                                                                    + "bin" + File.separator + "java";
+  private static final String             JAVA_CMD           = System.getProperty("java.home") + File.separator + "bin"
+                                                               + File.separator + "java";
 
   private final File                      serverInstallDir;
   private String                          instanceName;
   private File                            instanceDir;
-  private Thread                          runner                  = null;
-  private final HashMap<String, PortLine> portMap                 = new HashMap<String, PortLine>();
-  private int                             start_port              = 0;
-  private int                             admin_port              = 0;
+  private Thread                          runner             = null;
+  private final HashMap<String, PortLine> portMap            = new HashMap<String, PortLine>();
+  private int                             start_port         = 0;
+  private int                             admin_port         = 0;
 
   public JBoss7xAppServer(JBoss7xAppServerInstallation installation) {
     super(installation);
@@ -86,22 +82,34 @@ public final class JBoss7xAppServer extends AbstractAppServer {
 
     // Try a different startup using the java command directly, to work around the boot.log init problem mentioned above
     File logDir = new File(instanceDir, "log");
-    final String[] startCmd = new String[] { JAVA_CMD,
-        "-Dorg.jboss.boot.log.file=" + new File(logDir, "boot.log").getAbsolutePath(),
-        "-Dlogging.configuration=file:" + new File(instanceDir, "configuration/logging.properties").getAbsolutePath(),
-        "-jar", new File(serverInstallDir, "jboss-modules.jar").getAbsolutePath(), "-mp",
-        new File(serverInstallDir, "modules").getAbsolutePath(), "-jaxpmodule", "javax.xml.jaxp-provider",
-        "org.jboss.as.standalone", "-Djboss.home.dir=" + serverInstallDir.getAbsolutePath(),
-        "-Djboss.server.base.dir=" + instanceDir.getAbsolutePath() };
 
-    System.err.println("Start cmd: " + Arrays.asList(startCmd));
+    // system properties the tests want to set needed to pass along to JBoss
+    String[] jvmargs = params.jvmArgs().replaceAll("'", "").split("\\s+");
 
+    List cmd = new ArrayList(Arrays.asList(jvmargs));
+    cmd.add(0, JAVA_CMD);
+    cmd.add("-Dorg.jboss.boot.log.file=" + new File(logDir, "boot.log").getAbsolutePath());
+    cmd.add("-Dlogging.configuration=file:"
+            + new File(instanceDir, "configuration/logging.properties").getAbsolutePath());
+    cmd.add("-jar");
+    cmd.add(new File(serverInstallDir, "jboss-modules.jar").getAbsolutePath());
+    cmd.add("-mp");
+    cmd.add(new File(serverInstallDir, "modules").getAbsolutePath());
+    cmd.add("-jaxpmodule");
+    cmd.add("javax.xml.jaxp-provider");
+    cmd.add("org.jboss.as.standalone");
+    cmd.add("-Djboss.home.dir=" + serverInstallDir.getAbsolutePath());
+    cmd.add("-Djboss.server.base.dir=" + instanceDir.getAbsolutePath());
+
+    System.err.println("Start cmd: " + cmd);
+
+    final String[] cmdArray = (String[]) cmd.toArray(new String[] {});
     final String nodeLogFile = new File(instanceDir + ".log").getAbsolutePath();
     runner = new Thread("runner for " + instanceName) {
       @Override
       public void run() {
         try {
-          Result result = Exec.execute(startCmd, nodeLogFile, null, instanceDir);
+          Result result = Exec.execute(cmdArray, nodeLogFile, null, instanceDir);
           if (result.getExitCode() != 0) {
             System.err.println(result);
           }
@@ -112,7 +120,6 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     };
     runner.start();
     AppServerUtil.waitForPort(start_port, START_STOP_TIMEOUT);
-    deployStartupMonitorWar();
     waitUntilWarsDeployed(START_STOP_TIMEOUT);
     System.err.println("Started " + instanceName + " on port " + start_port);
     return new AppServerResult(start_port, this);
@@ -227,26 +234,20 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     }
   }
 
-  private void deployStartupMonitorWar() throws Exception {
-    WARBuilder builder = new WARBuilder(STARTUP_MONITOR_CONTEXT + ".war", new File(this.sandboxDirectory(), "war"));
-    builder.addServlet("ok", "/*", OkServlet.class, new HashMap(), true);
-    Deployment deployment = builder.makeDeployment();
-    FileUtils.copyFileToDirectory(deployment.getFileSystemPath().getFile(), new File(instanceDir, "deployments"));
-  }
-
   private void waitUntilWarsDeployed(long waitTime) throws Exception {
     long timeToQuit = System.currentTimeMillis() + waitTime;
-    WebConversation wc = new WebConversation();
-    String fullURL = "http://localhost:" + start_port + "/" + STARTUP_MONITOR_CONTEXT + "/ok";
-    wc.setExceptionsThrownOnErrorStatus(false);
+    File deploymentsFolder = new File(instanceDir, "deployments");
+
     while (System.currentTimeMillis() < timeToQuit) {
-      WebResponse response = wc.getResponse(fullURL);
-      int responseCode = response.getResponseCode();
-      if (responseCode == 200) {
-        return;
-      } else {
-        Thread.sleep(500L);
-      }
+      File[] isdeployingFiles = deploymentsFolder.listFiles(new FileFilter() {
+        public boolean accept(File pathname) {
+          return (pathname.getName().endsWith(".isdeploying"));
+        }
+      });
+      if (isdeployingFiles == null) { throw new Exception("Deployment folder " + deploymentsFolder
+                                                          + " isn't a directory"); }
+      if (isdeployingFiles.length == 0) { return; }
+      Thread.sleep(1000L);
     }
   }
 
