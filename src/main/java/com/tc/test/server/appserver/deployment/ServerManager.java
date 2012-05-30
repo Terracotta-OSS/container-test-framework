@@ -346,7 +346,10 @@ public class ServerManager {
         AppServerInfo info = config.appServerInfo();
         String major = info.getMajor();
         String minor = info.getMinor();
-        if (major.equals("6")) {
+        if (major.equals("7")) {
+          break; // no custom mode for jboss7
+        }
+        else if (major.equals("6")) {
           if (minor.startsWith("0.")) {
             aCopy.addModule(TimUtil.JBOSS_6_0, resolveContainerTIM(TimUtil.JBOSS_6_0));
           } else {
