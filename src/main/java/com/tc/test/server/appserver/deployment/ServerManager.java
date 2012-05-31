@@ -446,6 +446,16 @@ public class ServerManager {
     if (addExpressConfig) {
       addExpressModeWarConfig(builder);
     }
+    // File format for the jboss-web.xml changed in jboss7, so change it here
+    // TODO: change how the default is picked up so we don't need to have this sort of logic for jboss8+?
+    if (isJboss7x()) {
+      if (addExpressConfig) {
+        builder.addFileAsResource(makeJboss7WebXml(config.appServerInfo()), "WEB-INF");
+      }
+      else {
+        builder.addFileAsResource(makeEmptyJboss7WebXml(), "WEB-INF");
+      }
+    }
     return builder;
   }
 
@@ -655,7 +665,7 @@ public class ServerManager {
     }
 
     builder.addFileAsResource(makeJbossContextXml(config.appServerInfo()), "WEB-INF");
-
+    // not using filter, but jboss7 still needs the express jars
     if (isJboss7x()) {
       try {
         builder.addDirectoryOrJARContainingClass(Class.forName(EXPRESS_MODE_LOAD_CLASS));
@@ -663,7 +673,6 @@ public class ServerManager {
       } catch (ClassNotFoundException e1) {
         throw new RuntimeException(e1);
       }
-      builder.addFileAsResource(makeJboss7WebXml(config.appServerInfo()), "WEB-INF");
     }
   }
 
