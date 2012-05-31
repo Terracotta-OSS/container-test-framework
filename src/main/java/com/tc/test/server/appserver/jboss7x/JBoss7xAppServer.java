@@ -234,6 +234,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     }
   }
 
+  // check that the wars in the deployment folder are deployed using the file naming convention of jboss
   private void waitUntilWarsDeployed(long waitTime) throws Exception {
     long timeToQuit = System.currentTimeMillis() + waitTime;
     File deploymentsFolder = new File(instanceDir, "deployments");
@@ -244,9 +245,30 @@ public final class JBoss7xAppServer extends AbstractAppServer {
           return (pathname.getName().endsWith(".isdeploying"));
         }
       });
+      File[] deployedFiles = deploymentsFolder.listFiles(new FileFilter() {
+        public boolean accept(File pathname) {
+          return (pathname.getName().endsWith(".deployed"));
+        }
+      });
+      File[] failedDeployFiles = deploymentsFolder.listFiles(new FileFilter() {
+        public boolean accept(File pathname) {
+          return (pathname.getName().endsWith(".failed"));
+        }
+      });
       if (isdeployingFiles == null) { throw new Exception("Deployment folder " + deploymentsFolder
                                                           + " isn't a directory"); }
-      if (isdeployingFiles.length == 0) { return; }
+      if (isdeployingFiles.length == 0) {
+        if (deployedFiles.length > 0) {
+          System.out.println("Successfully deployed " + deployedFiles.length + " files");
+          return;
+        }
+        if (failedDeployFiles.length > 0) {
+          System.err.println("At least one file failed to deploy, test will proceed but expect problems");
+          return;
+        }
+        // keep waiting, we likely didn't start deploying yet
+      }
+
       Thread.sleep(1000L);
     }
   }
