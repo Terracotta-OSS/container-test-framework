@@ -139,8 +139,8 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
         break;
       case AppServerInfo.WEBLOGIC:
         // bumped up because ContainerHibernateTest was failing with WL 9
-        // set perm size by default for all jvms - MNK-3713
-        parameters.appendJvmArgs("-XX:MaxPermSize=128m");
+        // MNK-3713
+        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=192m");
         parameters.appendJvmArgs("-Xms128m -Xmx256m");
         break;
       case AppServerInfo.GLASSFISH:
