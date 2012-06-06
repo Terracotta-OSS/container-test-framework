@@ -275,7 +275,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
 
   protected static String getPlatformScript(final String name) {
     if (Os.isWindows()) { return name + ".bat"; }
-    return name;
+    return name + ".sh";
   }
 
   /*
