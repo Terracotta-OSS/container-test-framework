@@ -54,6 +54,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     serverInstallDir = this.serverInstallDirectory();
   }
 
+  @Override
   public ServerResult start(ServerParameters parameters) throws Exception {
     StandardAppServerParameters params = (StandardAppServerParameters) parameters;
     instanceName = params.instanceName();
@@ -126,6 +127,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
   }
 
   // call jboss-cli to shutdown
+  @Override
   public void stop(ServerParameters parameters) throws Exception {
     // AppServerParameters params = (AppServerParameters) parameters;
     File stopScript = new File(new File(serverInstallDirectory(), "bin"), getPlatformScript("jboss-cli"));
@@ -133,8 +135,10 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     final String cmd[] = new String[] { stopScript.getAbsolutePath(), "--connect",
         "--controller=localhost:" + admin_port, ":shutdown" };
 
+    File stopResult = new File(instanceDir, "stop.log");
+
     System.err.println("Stop cmd: " + Arrays.asList(cmd));
-    Result result = Exec.execute(cmd, null, null, stopScript.getParentFile());
+    Result result = Exec.execute(cmd, stopResult.getAbsolutePath(), null, stopScript.getParentFile());
     if (result.getExitCode() != 0) {
       System.err.println(result);
     }
@@ -211,6 +215,9 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     tokens.add(new ReplaceLine.Token(p9.getLineNumber(), "(port=\"[0-9]+)", "port=\"" + p9.getPortNumber()));
     portMap.put("txn-status-manager", p9);
 
+    // increase deploy time 120s, default is only 60s
+    tokens.add(new ReplaceLine.Token(109, "deployment-scanner", "deployment-scanner deployment-timeout=\"120\""));
+
     File dest = new File(instanceDir, "configuration/standalone.xml");
     ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
   }
@@ -241,16 +248,19 @@ public final class JBoss7xAppServer extends AbstractAppServer {
 
     while (System.currentTimeMillis() < timeToQuit) {
       File[] isdeployingFiles = deploymentsFolder.listFiles(new FileFilter() {
+        @Override
         public boolean accept(File pathname) {
           return (pathname.getName().endsWith(".isdeploying"));
         }
       });
       File[] deployedFiles = deploymentsFolder.listFiles(new FileFilter() {
+        @Override
         public boolean accept(File pathname) {
           return (pathname.getName().endsWith(".deployed"));
         }
       });
       File[] failedDeployFiles = deploymentsFolder.listFiles(new FileFilter() {
+        @Override
         public boolean accept(File pathname) {
           return (pathname.getName().endsWith(".failed"));
         }
