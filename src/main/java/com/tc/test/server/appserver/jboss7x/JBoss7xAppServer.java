@@ -66,6 +66,8 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     start_port = portMap.get("http").getPortNumber();
     admin_port = portMap.get("management-native").getPortNumber();
 
+    disableJAXRS(); // TODO: make this conditional (test specified)
+
     deployWars(params.deployables());
 
     System.err.println("Starting jboss7 " + instanceName + " on port " + start_port + "...");
@@ -160,6 +162,17 @@ public final class JBoss7xAppServer extends AbstractAppServer {
   private void setJVMRoute() throws IOException {
     List<ReplaceLine.Token> tokens = new ArrayList<ReplaceLine.Token>();
     tokens.add(new ReplaceLine.Token(256, "(>)", " instance-id=\"" + instanceName + "\">"));
+    File dest = new File(instanceDir, "configuration/standalone.xml");
+    ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
+  }
+
+  /*
+   * DEV-8177 remove references to JAXRS in standalone.xml to prevent conflict
+   */
+  public void disableJAXRS() throws IOException {
+    List<ReplaceLine.Token> tokens = new ArrayList<ReplaceLine.Token>();
+    // tokens.add(new ReplaceLine.Token(11, ".*jaxrs.*", "")); // removes it in extensions
+    tokens.add(new ReplaceLine.Token(163, ".*jaxrs.*", "")); // removes it in subsystem
     File dest = new File(instanceDir, "configuration/standalone.xml");
     ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
   }
