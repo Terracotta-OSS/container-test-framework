@@ -134,27 +134,16 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
       case AppServerInfo.TOMCAT:
       case AppServerInfo.JBOSS:
         parameters.appendJvmArgs("-Djvmroute=" + serverInstanceName);
-        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
-        parameters.appendJvmArgs("-Xms128m -Xmx256m");
-        break;
-      case AppServerInfo.WEBLOGIC:
-        // bumped up because ContainerHibernateTest was failing with WL 9
-        // MNK-3713
-        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=192m");
-        parameters.appendJvmArgs("-Xms128m -Xmx256m");
-        break;
-      case AppServerInfo.GLASSFISH:
-        // bumped up because ContainerHibernateTest, ContinuationsTest was failing with glassfish-v1
-        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
-        parameters.appendJvmArgs("-Xms128m -Xmx256m");
-        // parameters.appendJvmArgs("-XX:+PrintGCDetails");
         break;
       case AppServerInfo.WEBSPHERE:
         parameters.appendSysProp("javax.management.builder.initial", "");
-        if (!Vm.isJRockit()) parameters.appendJvmArgs("-XX:MaxPermSize=128m");
-        parameters.appendJvmArgs("-Xms128m -Xmx256m");
         break;
     }
+
+    if (!Vm.isJRockit()) {
+      parameters.appendJvmArgs("-XX:MaxPermSize=192m");
+    }
+    parameters.appendJvmArgs("-Xms128m -Xmx256m");
 
     if (Os.isUnix() && new File("/dev/urandom").exists()) {
       // prevent hangs reading from /dev/random
