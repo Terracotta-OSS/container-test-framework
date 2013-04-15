@@ -10,7 +10,6 @@ import org.apache.commons.logging.LogFactory;
 import com.tc.test.AppServerInfo;
 import com.tc.test.TCTestCase;
 import com.tc.test.TestConfigObject;
-import com.tc.test.server.appserver.load.LowMemWorkaround;
 import com.tc.text.Banner;
 import com.tc.util.TcConfigBuilder;
 
@@ -48,8 +47,6 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   public boolean shouldDisable() {
-    if (LowMemWorkaround.lessThan2Gb()) { return true; }
-
     if (!TestConfigObject.getInstance().transparentTestsMode().equals(TestConfigObject.TRANSPARENT_TESTS_MODE_NORMAL)) {
       Banner.warnBanner("NOT RUNNNING TEST BECAUSE TEST MODE IS NOT 'normal'");
       return true;
