@@ -4,6 +4,8 @@
  */
 package com.tc.test.server.appserver.glassfishv3;
 
+import org.apache.commons.io.FileUtils;
+
 import com.tc.process.Exec;
 import com.tc.process.Exec.Result;
 import com.tc.test.server.ServerParameters;
@@ -122,9 +124,18 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
         Banner.errorBanner("instance still running on port " + httpPort);
       } else {
         System.err.println("Stopped instance on port " + httpPort);
+        deleteRuntimeJunk();
       }
     }
 
+  }
+
+  private void deleteRuntimeJunk() {
+    // This stuff can be large and not needed in the build archive
+    FileUtils.deleteQuietly(new File(instanceDir, "applications"));
+    FileUtils.deleteQuietly(new File(instanceDir, "osgi-cache"));
+    FileUtils.deleteQuietly(new File(instanceDir, "generated"));
+    FileUtils.deleteQuietly(new File(instanceDir, "war"));
   }
 
   @Override
