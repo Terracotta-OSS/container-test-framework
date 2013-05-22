@@ -235,11 +235,12 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     System.err.println("Started " + params.instanceName() + " on port " + httpPort);
 
-    waitForAppInstanceRunning(params);
+    waitForPing(nodeLogFile);
+
+    // waitForAppInstanceRunning(params);
 
     deployWars(nodeLogFile, params.deployables());
 
-    waitForPing(nodeLogFile);
 
     return new AppServerResult(httpPort, this);
   }
