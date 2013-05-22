@@ -180,7 +180,8 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
     cmd.add("--domainproperties");
     cmd.add("jms.port=" + pc.chooseRandomPort() + ":" + "orb.listener.port=" + pc.chooseRandomPort() + ":"
             + "http.ssl.port=" + pc.chooseRandomPort() + ":" + "orb.ssl.port=" + pc.chooseRandomPort() + ":"
-            + "orb.mutualauth.port=" + pc.chooseRandomPort() + ":" + "domain.jmxPort=" + pc.chooseRandomPort());
+            + "orb.mutualauth.port=" + pc.chooseRandomPort() + ":" + "domain.jmxPort=" + pc.chooseRandomPort() + ":"
+            + "java.debugger.port=" + pc.chooseRandomPort() + ":" + "osgi.shell.port=" + pc.chooseRandomPort());
     cmd.add("--savelogin=true");
     cmd.add("--nopassword=true");
     cmd.add(params.instanceName());
