@@ -235,12 +235,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     System.err.println("Started " + params.instanceName() + " on port " + httpPort);
 
-    waitForPing(nodeLogFile);
-
-    // waitForAppInstanceRunning(params);
+    waitForAppInstanceRunning(params);
 
     deployWars(nodeLogFile, params.deployables());
 
+    waitForPing(nodeLogFile);
 
     return new AppServerResult(httpPort, this);
   }
@@ -297,7 +296,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   }
 
   protected void waitForAppInstanceRunning(final AppServerParameters params) throws Exception {
-    while (true) {
+    long timeout = START_STOP_TIMEOUT + System.currentTimeMillis();
+    while (timeout < System.currentTimeMillis()) {
       String status = getAppInstanceStatus(params);
       System.err.println(params.instanceName() + " is " + status);
       if ("running".equals(status) || status.contains("Running")) {
@@ -323,11 +323,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
      */
     // System.err.println("list-domains output: \n" + result.getStdout());
     if (result.getStderr().trim().length() > 0) {
-      System.err.println("Error Stream: " + result.getStderr());
+      System.err.println("Error getting app status, will retry: " + result.getStderr());
     }
     System.err.flush();
 
-    if (result.getExitCode() != 0) { throw new RuntimeException(result.toString()); }
+    if (result.getExitCode() != 0) { return "error"; }
 
     return getStatus(params.instanceName(), result.getStdout());
   }
