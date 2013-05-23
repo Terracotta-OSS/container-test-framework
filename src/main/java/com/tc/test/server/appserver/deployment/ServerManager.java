@@ -236,6 +236,13 @@ public class ServerManager {
 
   public DeploymentBuilder makeDeploymentBuilder(final String warFileName, boolean clustered) {
     DeploymentBuilder builder = new WARBuilder(warFileName, warDir, config, clustered);
+    try {
+      // XXX: hack to put system-tests-set1 into the WARs of the tests from set2
+      Class set1Dummy = Class.forName("com.tctest.util.Set1Dummy");
+      builder.addDirectoryOrJARContainingClass(set1Dummy);
+    } catch (ClassNotFoundException e) {
+      // ignored
+    }
 
     if (clustered) {
       addExpressModeWarConfig(builder);
