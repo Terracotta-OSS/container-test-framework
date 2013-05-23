@@ -87,20 +87,24 @@ public final class Resin40xAppServer extends AbstractAppServer {
         this.serverInstallDirectory() + File.separator + "lib" + File.separator + "resin.jar", "stop", "-conf",
         configFile, "-resin-home", serverInstallDirectory().getAbsolutePath() };
 
-    System.err.println("Stopping instance " + instanceName + "...");
-    Result result = Exec.execute(cmd, null, null, this.serverInstallDirectory());
-    if (result.getExitCode() != 0) {
-      System.err.println(result);
-    }
-    // we wait until watchdog port to shutdown before asserting the Resin server is down
-    AppServerUtil.waitForPortToShutdown(watchdog_port, START_STOP_TIMEOUT);
-    if (runner != null) {
-      runner.join(START_STOP_TIMEOUT);
-      if (runner.isAlive()) {
-        System.err.println("Instance " + instanceName + " on port " + resin_port + " still alive.");
-      } else {
-        System.err.println("Resin instance " + instanceName + " stopped");
+    try {
+      System.err.println("Stopping instance " + instanceName + "...");
+      Result result = Exec.execute(cmd, null, null, this.serverInstallDirectory());
+      if (result.getExitCode() != 0) {
+        System.err.println(result);
       }
+      // we wait until watchdog port to shutdown before asserting the Resin server is down
+      AppServerUtil.waitForPortToShutdown(watchdog_port, START_STOP_TIMEOUT);
+      if (runner != null) {
+        runner.join(START_STOP_TIMEOUT);
+        if (runner.isAlive()) {
+          System.err.println("Instance " + instanceName + " on port " + resin_port + " still alive.");
+        } else {
+          System.err.println("Resin instance " + instanceName + " stopped");
+        }
+      }
+    } finally {
+      FileUtils.deleteQuietly(new File(instanceDir, "resin-data"));
     }
 
   }
