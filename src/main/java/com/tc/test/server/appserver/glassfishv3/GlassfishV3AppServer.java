@@ -89,7 +89,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
         try {
           Result result = Exec.execute(process, cmd, nodeLogFile.getAbsolutePath(), null, instanceDir);
           if (result.getExitCode() != 0) {
-            System.err.println(result);
+            System.out.println(result);
           }
         } catch (Throwable e) {
           e.printStackTrace();
@@ -97,7 +97,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
       }
     };
     runner.start();
-    System.err.println("Starting " + params.instanceName() + " on port " + httpPort + "...");
+    System.out.println("Starting " + params.instanceName() + " on port " + httpPort + "...");
 
     boolean started = false;
     long timeout = System.currentTimeMillis() + AbstractGlassfishAppServer.START_STOP_TIMEOUT;
@@ -116,7 +116,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
     if (!started) { throw new RuntimeException("Failed to start server in "
                                                + AbstractGlassfishAppServer.START_STOP_TIMEOUT + "ms"); }
 
-    System.err.println("Started " + params.instanceName() + " on port " + httpPort);
+    System.out.println("Started " + params.instanceName() + " on port " + httpPort);
 
     waitForAppInstanceRunning(params);
 
@@ -130,7 +130,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
   @Override
   public void stop(final ServerParameters rawParams) throws Exception {
     AppServerParameters params = (AppServerParameters) rawParams;
-    System.err.println("Stopping instance on port " + httpPort + "...");
+    System.out.println("Stopping instance on port " + httpPort + "...");
 
     File stopScript = getStopScript(params);
     final String cmd[] = new String[] { stopScript.getAbsolutePath(), "--domaindir",
@@ -138,7 +138,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
 
     Result result = Exec.execute(cmd, null, null, stopScript.getParentFile());
     if (result.getExitCode() != 0) {
-      System.err.println(result);
+      System.out.println(result);
     }
 
     if (runner != null) {
@@ -146,7 +146,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
       if (runner.isAlive()) {
         Banner.errorBanner("instance still running on port " + httpPort);
       } else {
-        System.err.println("Stopped instance on port " + httpPort);
+        System.out.println("Stopped instance on port " + httpPort);
         deleteRuntimeJunk();
       }
     }
@@ -181,7 +181,7 @@ public class GlassfishV3AppServer extends AbstractGlassfishAppServer {
     cmd.add("jms.port=" + pc.chooseRandomPort() + ":" + "orb.listener.port=" + pc.chooseRandomPort() + ":"
             + "http.ssl.port=" + pc.chooseRandomPort() + ":" + "orb.ssl.port=" + pc.chooseRandomPort() + ":"
             + "orb.mutualauth.port=" + pc.chooseRandomPort() + ":" + "domain.jmxPort=" + pc.chooseRandomPort() + ":"
-            + "java.debugger.port=" + pc.chooseRandomPort() + ":" + "osgi.shell.port=" + pc.chooseRandomPort());
+            + "java.debugger.port=" + pc.chooseRandomPort() + ":" + "osgi.shell.telnet.port=" + pc.chooseRandomPort());
     cmd.add("--savelogin=true");
     cmd.add("--nopassword=true");
     cmd.add(params.instanceName());

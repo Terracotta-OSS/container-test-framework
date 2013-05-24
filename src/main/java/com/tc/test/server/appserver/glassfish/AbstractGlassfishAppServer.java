@@ -207,7 +207,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
         try {
           Result result = Exec.execute(process, cmd, nodeLogFile.getAbsolutePath(), startupInput(), instanceDir);
           if (result.getExitCode() != 0) {
-            System.err.println(result);
+            System.out.println(result);
           }
         } catch (Throwable e) {
           e.printStackTrace();
@@ -215,7 +215,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       }
     };
     runner.start();
-    System.err.println("Starting " + params.instanceName() + " on port " + httpPort + "...");
+    System.out.println("Starting " + params.instanceName() + " on port " + httpPort + "...");
 
     boolean started = false;
     long timeout = System.currentTimeMillis() + START_STOP_TIMEOUT;
@@ -233,7 +233,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     if (!started) { throw new RuntimeException("Failed to start server in " + START_STOP_TIMEOUT + "ms"); }
 
-    System.err.println("Started " + params.instanceName() + " on port " + httpPort);
+    System.out.println("Started " + params.instanceName() + " on port " + httpPort);
 
     waitForAppInstanceRunning(params);
 
@@ -279,7 +279,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     for (int i = 0; i < tries; i++) {
       WebResponse response;
       try {
-        System.err.println("Pinging " + pingUrl + " - try #" + i);
+        System.out.println("Pinging " + pingUrl + " - try #" + i);
         response = wc.getPage(pingUrl).getWebResponse();
         if (response.getStatusCode() == 200) return;
       } catch (Exception e) {
@@ -299,11 +299,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     long timeout = START_STOP_TIMEOUT + System.currentTimeMillis();
     while (timeout < System.currentTimeMillis()) {
       String status = getAppInstanceStatus(params);
-      System.err.println(params.instanceName() + " is " + status);
+      System.out.println(params.instanceName() + " is " + status);
       if ("running".equals(status) || status.contains("Running")) {
         break;
       }
-      System.err.println("Sleeping for 2 sec before checking again...");
+      System.out.println("Sleeping for 2 sec before checking again...");
       ThreadUtil.reallySleep(2000);
     }
   }
@@ -321,11 +321,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
      * Output should be something like this: <instance_name> <status> where <instance_name> is the name of the instance
      * <status> is one of {not running, running, starting}
      */
-    // System.err.println("list-domains output: \n" + result.getStdout());
+    // System.out.println("list-domains output: \n" + result.getStdout());
     if (result.getStderr().trim().length() > 0) {
-      System.err.println("Error getting app status, will retry: " + result.getStderr());
+      System.out.println("Error getting app status, will retry: " + result.getStderr());
     }
-    System.err.flush();
+    System.out.flush();
 
     if (result.getExitCode() != 0) { return "error"; }
 
@@ -388,7 +388,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
   private void deployWar(final String warName, final File warFile, final File nodeLogFile) throws IOException,
       Exception {
-    System.err.println("Deploying war [" + warName + "] on " + instanceDir.getName());
+    System.out.println("Deploying war [" + warName + "] on " + instanceDir.getName());
 
     List cmd = new ArrayList();
     cmd.add(getAsadminScript().getAbsolutePath());
@@ -405,8 +405,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
     Result result = Exec.execute((String[]) cmd.toArray(new String[] {}));
 
     if (result.getExitCode() == 0) {
-      System.err.println("Deployed war file successfully (supposedly).");
-      System.err.println(result);
+      System.out.println("Deployed war file successfully (supposedly).");
+      System.out.println(result);
       return;
     }
 
@@ -421,7 +421,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
         .grep("^SEVERE: WEB0610: WebModule \\[/web1\\] failed to deploy and has been disabled$", nodeLogFile);
     if (!hits.isEmpty()) { throw new RetryException(result.toString()); }
 
-    if (result.getStderr().contains("Remote server does not listen for requests on")) { 
+    if (result.getStderr().contains("Remote server does not listen for requests on")) {
       throw new RetryException(result.toString());
     }
 
@@ -456,7 +456,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     String output = result.getStdout().trim();
 
-    System.err.println(output);
+    System.out.println(output);
 
     if (!output.startsWith("STARTOFCOMMAND|") || !output.endsWith("|ENDOFCOMMAND|")) { throw new RuntimeException(
                                                                                                                   "cannot parse output: "
@@ -492,7 +492,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
     cmd.add(0, JAVA_CMD);
 
-    System.err.println("XXX startup command: " + cmd);
+    System.out.println("XXX startup command: " + cmd);
     return (String[]) cmd.toArray(new String[] {});
   }
 
@@ -503,7 +503,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   protected void modifyDomainConfig(final AppServerParameters params) throws Exception {
     File domainXML = getInstanceFile("config/domain.xml");
 
-    System.err.println("Modifying domain configuration at " + domainXML.getAbsolutePath());
+    System.out.println("Modifying domain configuration at " + domainXML.getAbsolutePath());
 
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -566,12 +566,12 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   @Override
   public void stop(final ServerParameters rawParams) throws Exception {
     AppServerParameters params = (AppServerParameters) rawParams;
-    System.err.println("Stopping instance on port " + httpPort + "...");
+    System.out.println("Stopping instance on port " + httpPort + "...");
 
     File stopScript = getStopScript(params);
     Result result = Exec.execute(new String[] { stopScript.getAbsolutePath() }, null, null, stopScript.getParentFile());
     if (result.getExitCode() != 0) {
-      System.err.println(result);
+      System.out.println(result);
     }
 
     if (runner != null) {
@@ -579,7 +579,7 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
       if (runner.isAlive()) {
         Banner.errorBanner("instance still running on port " + httpPort);
       } else {
-        System.err.println("Stopped instance on port " + httpPort);
+        System.out.println("Stopped instance on port " + httpPort);
       }
     }
 
