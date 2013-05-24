@@ -297,9 +297,9 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
 
   protected void waitForAppInstanceRunning(final AppServerParameters params) throws Exception {
     long timeout = START_STOP_TIMEOUT + System.currentTimeMillis();
-    while (timeout < System.currentTimeMillis()) {
+    while (System.currentTimeMillis() < timeout) {
       String status = getAppInstanceStatus(params);
-      System.out.println(params.instanceName() + " is " + status);
+      System.out.println("Status of " + params.instanceName() + " is " + status);
       if ("running".equals(status) || status.contains("Running")) {
         break;
       }
