@@ -421,6 +421,10 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
         .grep("^SEVERE: WEB0610: WebModule \\[/web1\\] failed to deploy and has been disabled$", nodeLogFile);
     if (!hits.isEmpty()) { throw new RetryException(result.toString()); }
 
+    if (result.getStderr().contains("Remote server does not listen for requests on")) { 
+      throw new RetryException(result.toString());
+    }
+
     // Generic deploy failure
     throw new RuntimeException("Deploy failed for " + warName + ": " + result);
   }
