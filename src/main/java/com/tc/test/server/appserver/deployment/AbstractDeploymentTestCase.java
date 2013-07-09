@@ -83,8 +83,9 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   protected ServerManager getServerManager() {
     if (serverManager == null) {
       try {
-        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), getSessionLocking(),
-                                                       getSynchronousWrite(), getExtraJvmArgsForL2());
+        serverManager = ServerManagerUtil.startAndBind(getClass(), isWithPersistentStore(), useProxyTCServer(),
+                                                       getSessionLocking(), getSynchronousWrite(),
+                                                       getExtraJvmArgsForL2());
       } catch (Exception e) {
         throw new RuntimeException("Unable to create server manager; " + e.toString(), e);
       }
@@ -110,7 +111,7 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   protected void restartDSO() throws Exception {
-    getServerManager().restartDSO(isWithPersistentStore());
+    getServerManager().restartDSO(isWithPersistentStore(), useProxyTCServer());
   }
 
   protected DeploymentBuilder makeDeploymentBuilder(String warFileName) {
@@ -147,6 +148,10 @@ public abstract class AbstractDeploymentTestCase extends TCTestCase {
   }
 
   protected boolean isWithPersistentStore() {
+    return false;
+  }
+
+  protected boolean useProxyTCServer() {
     return false;
   }
 

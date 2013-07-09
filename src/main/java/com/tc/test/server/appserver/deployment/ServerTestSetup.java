@@ -56,7 +56,7 @@ public class ServerTestSetup extends TestSetup {
   protected ServerManager getServerManager() {
     if (sm == null) {
       try {
-        sm = ServerManagerUtil.startAndBind(testClass, isWithPersistentStore(), getSessionLocking(),
+        sm = ServerManagerUtil.startAndBind(testClass, isWithPersistentStore(), useProxyTCServer(), getSessionLocking(),
                                             getSynchronousWrite(), Collections.EMPTY_LIST);
       } catch (Exception e) {
         throw new RuntimeException("Unable to create server manager", e);
@@ -79,6 +79,14 @@ public class ServerTestSetup extends TestSetup {
 
   protected boolean isWithPersistentStore() {
     // override if you please
+    return false;
+  }
+
+  private boolean useProxyTCServer() {
+    for (Enumeration e = ((TestSuite) fTest).tests(); e.hasMoreElements();) {
+      Object o = e.nextElement();
+      if (o instanceof AbstractDeploymentTestCase && ((AbstractDeploymentTestCase) o).useProxyTCServer()) { return true; }
+    }
     return false;
   }
 

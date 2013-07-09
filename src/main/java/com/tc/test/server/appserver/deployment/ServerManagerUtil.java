@@ -14,14 +14,17 @@ public class ServerManagerUtil {
   protected final static Log logger = LogFactory.getLog(ServerManagerUtil.class);
   private static ServerManager theServerManager;
 
-  private static synchronized ServerManager start(Class testClass, boolean withPersistentStore, Boolean isSessionLocking, Boolean isSynchronousWrite, Collection extraJvmArgs) throws Exception {
+  private static synchronized ServerManager start(Class testClass, boolean withPersistentStore, boolean useProxy,
+                                                  Boolean isSessionLocking, Boolean isSynchronousWrite,
+                                                  Collection extraJvmArgs) throws Exception {
     ServerManager existingServerManager = getExistingServerManager();
     if (existingServerManager != null) {
       logger.debug("Using existing ServerManager");
       return existingServerManager;
     }
     logger.debug("Creating server manager");
-    ServerManager serverManager = new ServerManager(testClass, extraJvmArgs, isSessionLocking, isSynchronousWrite);
+    ServerManager serverManager = new ServerManager(testClass, extraJvmArgs, isSessionLocking, isSynchronousWrite,
+                                                    useProxy);
     serverManager.start(withPersistentStore);
     return serverManager;
   }
@@ -40,9 +43,12 @@ public class ServerManagerUtil {
     return theServerManager;
   }
 
-  public static synchronized ServerManager startAndBind(Class testClass, boolean withPersistentStore, Boolean isSessionLocking, Boolean isSynchronousWrite, Collection extraJvmArgs)
+  public static synchronized ServerManager startAndBind(Class testClass, boolean withPersistentStore, boolean useProxy,
+                                                        Boolean isSessionLocking, Boolean isSynchronousWrite,
+                                                        Collection extraJvmArgs)
       throws Exception {
-    ServerManager sm = start(testClass, withPersistentStore, isSessionLocking, isSynchronousWrite, extraJvmArgs);
+    ServerManager sm = start(testClass, withPersistentStore, useProxy, isSessionLocking, isSynchronousWrite,
+                             extraJvmArgs);
     theServerManager = sm;
     return sm;
   }

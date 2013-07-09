@@ -11,6 +11,8 @@ import com.tc.logging.TCLogger;
 import com.tc.logging.TCLogging;
 import com.tc.test.AppServerInfo;
 import com.tc.test.TestConfigObject;
+import com.tc.test.proxy.ProxyConnectManager;
+import com.tc.test.proxy.ProxyConnectManagerImpl;
 import com.tc.test.server.appserver.AppServerFactory;
 import com.tc.test.server.appserver.AppServerInstallation;
 import com.tc.test.server.util.AppServerUtil;
@@ -47,6 +49,9 @@ public class ServerManager {
 
   private List                        serversToStop              = new ArrayList();
   private DSOServer                   dsoServer;
+  private ProxyConnectManager         l2ProxyManager;
+  private final boolean               useTsaProxy;
+  private ConfigProxy                 configProxy;
 
   private final TestConfigObject      config;
   private final AppServerFactory      factory;
@@ -65,10 +70,11 @@ public class ServerManager {
   private final boolean               isSessionTest;
 
   public ServerManager(final Class testClass, final Collection extraJvmArgs, Boolean isSessionLocking,
-                       Boolean isSynchronousWrite) throws Exception {
+                       Boolean isSynchronousWrite, boolean useTsaProxy) throws Exception {
     this.isSessionLocking = isSessionLocking;
     this.isSynchronousWrite = isSynchronousWrite;
     this.isSessionTest = isTerracottaSessionJarPresent();
+    this.useTsaProxy = useTsaProxy;
 
     config = TestConfigObject.getInstance();
     factory = AppServerFactory.createFactoryFromProperties();
@@ -86,10 +92,23 @@ public class ServerManager {
       serverTcConfig.setJmxPort(9520);
       serverTcConfig.setGroupPort(9530);
     } else {
+
       PortChooser pc = new PortChooser();
-      serverTcConfig.setTsaPort(pc.chooseRandomPort());
-      serverTcConfig.setJmxPort(pc.chooseRandomPort());
-      serverTcConfig.setGroupPort(pc.chooseRandomPort());
+      int tsaPort = pc.chooseRandomPort();
+      int proxyTsaPort = pc.chooseRandomPort();
+      int jmxPort = pc.chooseRandomPort();
+      int groupPort = pc.chooseRandomPort();
+
+      serverTcConfig.setJmxPort(jmxPort);
+      serverTcConfig.setGroupPort(groupPort);
+      serverTcConfig.setTsaPort(tsaPort);
+
+      if (useTsaProxy) {
+        l2ProxyManager = new ProxyConnectManagerImpl(tsaPort, proxyTsaPort);
+        l2ProxyManager.setupProxy();
+        configProxy = new ConfigProxy(tsaPort, proxyTsaPort, pc.chooseRandomPort());
+        serverTcConfig.addProperty("l1.l2.config.validation.enabled", "false");
+      }
     }
   }
 
@@ -173,9 +192,14 @@ public class ServerManager {
     System.out.println("Starting DSO server with sandbox: " + sandbox.getAbsolutePath());
     dsoServer.start();
     addServerToStop(dsoServer);
+
+    if (useTsaProxy) {
+      l2ProxyManager.proxyUp();
+      configProxy.start();
+    }
   }
 
-  public void restartDSO(final boolean withPersistentStore) throws Exception {
+  public void restartDSO(final boolean withPersistentStore, boolean useProxy) throws Exception {
     System.out.println("Restarting DSO server : " + dsoServer);
     dsoServer.stop();
     startDSO(withPersistentStore);
@@ -287,6 +311,18 @@ public class ServerManager {
     return tcConfigFile;
   }
 
+  public ProxyConnectManager getL2ProxyManager() {
+    return l2ProxyManager;
+  }
+
+  public ConfigProxy getConfigProxy() {
+    return configProxy;
+  }
+
+  public boolean useProxyTCServer() {
+    return useTsaProxy;
+  }
+
   @Override
   public String toString() {
     return "ServerManager{" + "dsoServer=" + dsoServer.toString() + ", sandbox=" + sandbox.getAbsolutePath()
@@ -294,7 +330,11 @@ public class ServerManager {
   }
 
   private String getTcConfigUrl() {
-    return "localhost:" + serverTcConfig.getTsaPort();
+    int tsaPort = serverTcConfig.getTsaPort();
+    if (useTsaProxy) {
+      tsaPort = configProxy.getConfigProxyPort();
+    }
+    return "localhost:" + tsaPort;
   }
 
   private boolean useFilter() {
