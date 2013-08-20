@@ -43,7 +43,7 @@ public class WebsphereAppServer extends AbstractAppServer {
   private static final String     DEPLOY_APPS_PY             = "deployApps.py";
   private static final String     ENABLE_DSO_PY              = "enable-dso.py";
   private static final String     DSO_JVMARGS                = "__DSO_JVMARGS__";
-  private static final int        START_STOP_TIMEOUT_SECONDS = 5 * 60;
+  private static final int        START_STOP_TIMEOUT_SECONDS = 10 * 60;
 
   private final String[]          scripts                    = new String[] { DEPLOY_APPS_PY, TERRACOTTA_PY,
       ENABLE_DSO_PY                                         };
