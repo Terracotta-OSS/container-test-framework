@@ -152,8 +152,7 @@ public class JBossHelper {
     File dest = new File(serverDir, "conf/bindingservice.beans/META-INF/bindings-jboss-beans.xml");
 
     // randomize more ports
-    int[] lines = new int[] { 167, 174, 182, 205, 212, 220, 229, 236, 250, 302, 311, 320, 327, 334, 341, 368, 412, 420,
-        430, 439, 453, 461, 470, 480, 493 };
+    int[] lines = new int[] { 107, 121, 317, 324, 341, 358, 402, 410 };
     for (int line : lines) {
       int port = pc.chooseRandomPort();
       tokens.add(new ReplaceLine.Token(line, "\"port\">[0-9]+", "\"port\">" + port));
