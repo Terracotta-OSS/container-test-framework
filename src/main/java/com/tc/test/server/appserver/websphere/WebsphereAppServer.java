@@ -18,6 +18,8 @@ import com.tc.test.server.appserver.AppServerInstallation;
 import com.tc.test.server.appserver.AppServerParameters;
 import com.tc.test.server.appserver.AppServerResult;
 import com.tc.test.server.util.AppServerUtil;
+import com.tc.test.server.util.ParamsWithRetry;
+import com.tc.util.Grep;
 import com.tc.util.StringUtil;
 import com.tc.util.runtime.Os;
 
@@ -44,6 +46,7 @@ public class WebsphereAppServer extends AbstractAppServer {
   private static final String     ENABLE_DSO_PY              = "enable-dso.py";
   private static final String     DSO_JVMARGS                = "__DSO_JVMARGS__";
   private static final int        START_STOP_TIMEOUT_SECONDS = 10 * 60;
+  private static final int        RETRIES                    = 3;
 
   private final String[]          scripts                    = new String[] { DEPLOY_APPS_PY, TERRACOTTA_PY,
       ENABLE_DSO_PY                                         };
@@ -66,40 +69,41 @@ public class WebsphereAppServer extends AbstractAppServer {
   private File                    profileResistry;
   private String                  processId;
 
-  private Thread                  serverThread;
-
   public WebsphereAppServer(AppServerInstallation installation) {
     super(installation);
   }
 
   @Override
   public ServerResult start(ServerParameters parameters) throws Exception {
-    init(parameters);
-    reset();
-    copyPythonScripts();
-    patchTerracottaPy();
-    createProfile();
-    deployWebapps();
-    addTerracottaToServerPolicy();
-    enableDSO();
-    if (extraScript != null) {
-      executeJythonScript(extraScript);
-    }
-    serverThread = new Thread() {
-      @Override
-      public void run() {
-        try {
-          startWebsphere();
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
+    AppServerParameters params = (AppServerParameters) parameters;
+
+    for (int i = 0; i < RETRIES; i++) {
+      params = new ParamsWithRetry(params, i);
+      init(params);
+      reset();
+      copyPythonScripts();
+      patchTerracottaPy();
+      createProfile();
+      deployWebapps();
+      addTerracottaToServerPolicy();
+      enableDSO();
+      if (extraScript != null) {
+        executeJythonScript(extraScript);
       }
-    };
-    serverThread.setDaemon(true);
-    serverThread.start();
-    AppServerUtil.waitForPort(webspherePort, START_STOP_TIMEOUT_SECONDS * 1000);
-    System.out.println("Websphere instance " + instanceName + " started on port " + webspherePort);
-    return new AppServerResult(webspherePort, this);
+
+      startWebsphere();
+      AppServerUtil.waitForPort(webspherePort, START_STOP_TIMEOUT_SECONDS * 1000);
+
+      if (checkNpeStartupBug(new File(instanceDir, "logs/server1/SystemOut.log"))) {
+        System.err.println("Retrying startup..." + i);
+        forceKill();
+      } else {
+        System.out.println("Websphere instance " + instanceName + " started on port " + webspherePort);
+        return new AppServerResult(webspherePort, this);
+      }
+    }
+
+    throw new RuntimeException("Failed to start");
   }
 
   @Override
@@ -378,18 +382,25 @@ public class WebsphereAppServer extends AbstractAppServer {
     if (index > 0) {
       processId = output.substring(index + 13).trim();
     }
+
+  }
+
+  protected static boolean checkNpeStartupBug(File systemOutLogFile) throws IOException {
+    List<CharSequence> hits = Grep.grep("^.*open for e-business, problems occurred during startup$", systemOutLogFile);
+    List<CharSequence> hits2 = Grep.grep("^.*isclite failed to start.$", systemOutLogFile);
+    List<CharSequence> hits3 = Grep
+        .grep("^com.ibm.ws.exception.RuntimeWarning: com.ibm.ws.exception.RuntimeError: java.lang.RuntimeException: java.lang.ExceptionInInitializerError$",
+              systemOutLogFile);
+
+    return (!hits.isEmpty() && !hits2.isEmpty()) && !hits3.isEmpty();
   }
 
   private void stopWebsphere() throws Exception {
     String[] args = new String[] { "server1", "-profileName", instanceName };
     executeCommand(serverInstallDir, "stopServer", args, instanceDir, "Error in stopping " + instanceName);
-    if (serverThread != null) {
-      serverThread.join(START_STOP_TIMEOUT_SECONDS * 1000);
-    }
   }
 
-  private void init(ServerParameters parameters) {
-    AppServerParameters params = (AppServerParameters) parameters;
+  private void init(AppServerParameters params) {
     sandbox = sandboxDirectory();
     instanceName = params.instanceName();
     instanceDir = new File(sandbox, instanceName);
