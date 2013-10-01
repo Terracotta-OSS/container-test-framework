@@ -385,14 +385,11 @@ public class WebsphereAppServer extends AbstractAppServer {
 
   }
 
-  protected static boolean checkNpeStartupBug(File systemOutLogFile) throws IOException {
+  private static boolean checkNpeStartupBug(File systemOutLogFile) throws IOException {
     List<CharSequence> hits = Grep.grep("^.*open for e-business, problems occurred during startup$", systemOutLogFile);
     List<CharSequence> hits2 = Grep.grep("^.*isclite failed to start.$", systemOutLogFile);
-    List<CharSequence> hits3 = Grep
-        .grep("^com.ibm.ws.exception.RuntimeWarning: com.ibm.ws.exception.RuntimeError: java.lang.RuntimeException: java.lang.ExceptionInInitializerError$",
-              systemOutLogFile);
 
-    return (!hits.isEmpty() && !hits2.isEmpty()) && !hits3.isEmpty();
+    return (!hits.isEmpty() && !hits2.isEmpty());
   }
 
   private void stopWebsphere() throws Exception {
