@@ -17,6 +17,7 @@ import com.tc.test.server.appserver.StandardAppServerParameters;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.text.Banner;
 import com.tc.util.runtime.Os;
+import com.tc.util.runtime.ThreadDump;
 import com.tc.util.runtime.Vm;
 
 import java.io.File;
@@ -200,12 +201,12 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
 
   private void dumpThreadsAndRethrow(final Exception e) throws Exception {
     try {
-      // ThreadDump.dumpAllJavaProcesses(3, 1000);
+      ThreadDump.dumpAllJavaProcesses(3, 1000);
     } catch (Throwable t) {
       t.printStackTrace();
-    } finally {
-      if (true) throw e; // if (true) used to silence warning
     }
+
+    throw e;
   }
 
   @Override
