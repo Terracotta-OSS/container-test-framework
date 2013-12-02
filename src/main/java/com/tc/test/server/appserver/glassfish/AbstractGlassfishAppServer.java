@@ -78,8 +78,8 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   protected Thread            runner;
   protected File              instanceDir;
 
-  protected int               httpPort           = pc.chooseRandomPort();
-  protected int               adminPort          = pc.chooseRandomPort();
+  protected int               httpPort;
+  protected int               adminPort;
 
   private Process             process;
 
@@ -190,6 +190,11 @@ public abstract class AbstractGlassfishAppServer extends AbstractAppServer {
   public ServerResult start(final ServerParameters rawParams) throws Exception {
     AppServerParameters params = (AppServerParameters) rawParams;
     for (int i = 0; i < STARTUP_RETRIES; i++) {
+
+      // choose/rechoose these ports for each retry
+      adminPort = pc.chooseRandomPort();
+      httpPort = pc.chooseRandomPort();
+
       try {
         return start0(new ParamsWithRetry(params, i));
       } catch (RetryException re) {
