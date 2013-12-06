@@ -466,4 +466,23 @@ public class WebsphereAppServer extends AbstractAppServer {
   public void setExtraScript(File extraScript) {
     this.extraScript = extraScript;
   }
+
+  public void doThreadDump() throws Exception {
+    if (processId != null && Os.isUnix()) {
+      String killCmd = findKillCommand();
+      if (killCmd == null) {
+        System.out.println("Can't find kill command to perform thread dump");
+        return;
+      }
+      Exec.execute(new String[] { killCmd, "-3", processId });
+    }
+  }
+
+  private String findKillCommand() {
+    String[] killCmds = new String[] { "/usr/bin/kill", "/bin/kill" };
+    for (String kill : killCmds) {
+      if (new File(kill).exists()) { return kill; }
+    }
+    return null;
+  }
 }
