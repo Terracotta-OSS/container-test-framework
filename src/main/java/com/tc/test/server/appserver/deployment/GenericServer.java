@@ -14,6 +14,7 @@ import com.tc.test.server.appserver.AppServer;
 import com.tc.test.server.appserver.AppServerFactory;
 import com.tc.test.server.appserver.AppServerInstallation;
 import com.tc.test.server.appserver.StandardAppServerParameters;
+import com.tc.test.server.appserver.websphere.WebsphereAppServer;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.text.Banner;
 import com.tc.util.runtime.Os;
@@ -202,6 +203,11 @@ public class GenericServer extends AbstractStoppable implements WebApplicationSe
   private void dumpThreadsAndRethrow(final Exception e) throws Exception {
     try {
       ThreadDump.dumpAllJavaProcesses(3, 1000);
+
+      // special case for Websphere, dumping IBM jdk stack trace
+      if (appId == AppServerInfo.WEBSPHERE) {
+        ((WebsphereAppServer) server).doThreadDump();
+      }
     } catch (Throwable t) {
       t.printStackTrace();
     }
