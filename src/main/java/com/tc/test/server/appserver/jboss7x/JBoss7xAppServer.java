@@ -13,6 +13,7 @@ import com.tc.test.server.ServerResult;
 import com.tc.test.server.appserver.AbstractAppServer;
 import com.tc.test.server.appserver.AppServerResult;
 import com.tc.test.server.appserver.StandardAppServerParameters;
+import com.tc.test.server.appserver.jboss_common.JBossHelper;
 import com.tc.test.server.util.AppServerUtil;
 import com.tc.text.Banner;
 import com.tc.util.PortChooser;
@@ -20,7 +21,6 @@ import com.tc.util.ReplaceLine;
 import com.tc.util.runtime.Os;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -110,7 +110,7 @@ public final class JBoss7xAppServer extends AbstractAppServer {
     };
     runner.start();
     AppServerUtil.waitForPort(start_port, START_STOP_TIMEOUT);
-    waitUntilWarsDeployed(START_STOP_TIMEOUT);
+    JBossHelper.waitUntilWarsDeployed(instanceDir, START_STOP_TIMEOUT);
     System.err.println("Started " + instanceName + " on port " + start_port);
     return new AppServerResult(start_port, this);
   }
@@ -238,48 +238,6 @@ public final class JBoss7xAppServer extends AbstractAppServer {
         File war_file = (File) war_entry.getValue();
         FileUtils.copyFileToDirectory(war_file, new File(instanceDir, "deployments"));
       }
-    }
-  }
-
-  // check that the wars in the deployment folder are deployed using the file naming convention of jboss
-  private void waitUntilWarsDeployed(long waitTime) throws Exception {
-    long timeToQuit = System.currentTimeMillis() + waitTime;
-    File deploymentsFolder = new File(instanceDir, "deployments");
-
-    while (System.currentTimeMillis() < timeToQuit) {
-      File[] isdeployingFiles = deploymentsFolder.listFiles(new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-          return (pathname.getName().endsWith(".isdeploying"));
-        }
-      });
-      File[] deployedFiles = deploymentsFolder.listFiles(new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-          return (pathname.getName().endsWith(".deployed"));
-        }
-      });
-      File[] failedDeployFiles = deploymentsFolder.listFiles(new FileFilter() {
-        @Override
-        public boolean accept(File pathname) {
-          return (pathname.getName().endsWith(".failed"));
-        }
-      });
-      if (isdeployingFiles == null) { throw new Exception("Deployment folder " + deploymentsFolder
-                                                          + " isn't a directory"); }
-      if (isdeployingFiles.length == 0) {
-        if (deployedFiles.length > 0) {
-          System.out.println("Successfully deployed " + deployedFiles.length + " files");
-          return;
-        }
-        if (failedDeployFiles.length > 0) {
-          System.err.println("At least one file failed to deploy, test will proceed but expect problems");
-          return;
-        }
-        // keep waiting, we likely didn't start deploying yet
-      }
-
-      Thread.sleep(1000L);
     }
   }
 
