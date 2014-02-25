@@ -44,12 +44,18 @@ public final class Tomcat7xAppServer extends CargoAppServer {
       this.params = params;
       config.setProperty(GeneralPropertySet.RMI_PORT, Integer.toString(AppServerUtil.getPort()));
       config.setProperty(TomcatPropertySet.AJP_PORT, Integer.toString(AppServerUtil.getPort()));
+
+      // StandaloneLocalConfiguration configuration = (StandaloneLocalConfiguration) config;
+      // FileConfig serverXml = new FileConfig();
+      // serverXml.setConfigfile("server.xml");
+      // serverXml.setToDir("conf");
+      // configuration.setConfigFileProperty(serverXml);
     }
 
     @Override
     protected void setState(State state) {
       if (state.isStarting()) {
-        TomcatStartupActions.modifyConfig(params, this, 47);
+        // TomcatStartupActions.modifyConfig(params, this, 47);
         TomcatStartupActions.configureManagerApp(params, this);
       }
 
