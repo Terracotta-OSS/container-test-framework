@@ -7,9 +7,12 @@ package com.tc.test.server.appserver.jboss72x;
 import org.apache.commons.io.FileUtils;
 import org.codehaus.cargo.container.InstalledLocalContainer;
 import org.codehaus.cargo.container.configuration.LocalConfiguration;
+import org.codehaus.cargo.container.jboss.JBoss72xInstalledLocalContainer;
 import org.codehaus.cargo.container.jboss.JBossPropertySet;
 import org.codehaus.cargo.container.property.GeneralPropertySet;
+import org.codehaus.cargo.container.spi.jvm.JvmLauncher;
 
+import com.tc.test.AppServerInfo;
 import com.tc.test.server.ServerParameters;
 import com.tc.test.server.ServerResult;
 import com.tc.test.server.appserver.AppServerParameters;
@@ -18,6 +21,7 @@ import com.tc.test.server.appserver.jboss_common.JBossHelper;
 import com.tc.test.server.util.AppServerUtil;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,10 +39,10 @@ public final class JBoss72xAppServer extends CargoAppServer {
     return "jboss72x";
   }
 
-  // @Override
-  // protected InstalledLocalContainer container(LocalConfiguration config, AppServerParameters params) {
-  // return new TCJBoss72xInstalledLocalContainer(config, params.sars(), appServerInfo(), params);
-  // }
+  @Override
+  protected InstalledLocalContainer container(LocalConfiguration config, AppServerParameters params) {
+    return new TCJBoss72xInstalledLocalContainer(config, params.sars(), appServerInfo(), params);
+  }
 
   @Override
   protected void setConfigProperties(LocalConfiguration config) throws Exception {
@@ -57,8 +61,8 @@ public final class JBoss72xAppServer extends CargoAppServer {
     config.setProperty(JBossPropertySet.JBOSS_TRANSACTION_STATUS_MANAGER_PORT,
                        Integer.toString(AppServerUtil.getPort()));
     config.setProperty(JBossPropertySet.REMOTEDEPLOY_PORT, Integer.toString(AppServerUtil.getPort()));
-    // config.setProperty(JBossPropertySet.JBOSS_MANAGEMENT_HTTP_PORT, Integer.toString(AppServerUtil.getPort()));
-    // config.setProperty(JBossPropertySet.JBOSS_MANAGEMENT_NATIVE_PORT, Integer.toString(AppServerUtil.getPort()));
+    config.setProperty(JBossPropertySet.JBOSS_MANAGEMENT_HTTP_PORT, Integer.toString(AppServerUtil.getPort()));
+    config.setProperty(JBossPropertySet.JBOSS_MANAGEMENT_NATIVE_PORT, Integer.toString(AppServerUtil.getPort()));
   }
 
   @Override
@@ -78,29 +82,24 @@ public final class JBoss72xAppServer extends CargoAppServer {
     }
   }
 
-  @Override
-  protected InstalledLocalContainer container(LocalConfiguration config, AppServerParameters params) {
-    return null;
-  }
+  private static class TCJBoss72xInstalledLocalContainer extends JBoss72xInstalledLocalContainer {
+    private final Collection          sars;
+    private final AppServerInfo       appServerInfo;
+    private final AppServerParameters params;
 
-  // private static class TCJBoss72xInstalledLocalContainer extends JBoss72xInstalledLocalContainer {
-  // private final Collection sars;
-  // private final AppServerInfo appServerInfo;
-  // private final AppServerParameters params;
-  //
-  // public TCJBoss72xInstalledLocalContainer(LocalConfiguration configuration, Collection sars,
-  // AppServerInfo appServerInfo, AppServerParameters params) {
-  // super(configuration);
-  // this.sars = sars;
-  // this.appServerInfo = appServerInfo;
-  // this.params = params;
-  // }
-  //
-  // @Override
-  // protected void doStart(JvmLauncher java) throws Exception {
-  // // JBossHelper.startupActions(new File(getConfiguration().getHome()), sars, appServerInfo, params);
-  // super.doStart(java);
-  // }
-  // }
+    public TCJBoss72xInstalledLocalContainer(LocalConfiguration configuration, Collection sars,
+                                             AppServerInfo appServerInfo, AppServerParameters params) {
+      super(configuration);
+      this.sars = sars;
+      this.appServerInfo = appServerInfo;
+      this.params = params;
+    }
+
+    @Override
+    protected void doStart(JvmLauncher java) throws Exception {
+      // JBossHelper.startupActions(new File(getConfiguration().getHome()), sars, appServerInfo, params);
+      super.doStart(java);
+    }
+  }
 
 }
