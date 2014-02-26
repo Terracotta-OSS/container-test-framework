@@ -5,7 +5,6 @@
 package com.tc.test.server.appserver.tomcat5x;
 
 import org.codehaus.cargo.container.InstalledLocalContainer;
-import org.codehaus.cargo.container.State;
 import org.codehaus.cargo.container.configuration.LocalConfiguration;
 import org.codehaus.cargo.container.property.GeneralPropertySet;
 import org.codehaus.cargo.container.tomcat.Tomcat5xInstalledLocalContainer;
@@ -55,14 +54,11 @@ public final class Tomcat5xAppServer extends CargoAppServer {
     }
 
     @Override
-    protected void setState(State state) {
-      if (state.isStarting()) {
-        int line = appServerInfo.getMinor().startsWith("0.") ? 45 : 60;
-        TomcatStartupActions.modifyConfig(params, this, line);
-        TomcatStartupActions.configureManagerApp(params, this);
-      }
-
-      super.setState(state);
+    protected void startInternal() throws Exception {
+      int line = appServerInfo.getMinor().startsWith("0.") ? 45 : 60;
+      TomcatStartupActions.modifyConfig(params, this, line);
+      TomcatStartupActions.configureManagerApp(params, this);
+      super.startInternal();
     }
   }
 

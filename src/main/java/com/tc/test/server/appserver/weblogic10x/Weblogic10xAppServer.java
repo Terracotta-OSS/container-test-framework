@@ -5,7 +5,6 @@
 package com.tc.test.server.appserver.weblogic10x;
 
 import org.codehaus.cargo.container.InstalledLocalContainer;
-import org.codehaus.cargo.container.State;
 import org.codehaus.cargo.container.configuration.LocalConfiguration;
 import org.codehaus.cargo.container.property.GeneralPropertySet;
 import org.codehaus.cargo.container.weblogic.WebLogic10xInstalledLocalContainer;
@@ -53,10 +52,9 @@ public final class Weblogic10xAppServer extends WeblogicAppServerBase {
     }
 
     @Override
-    protected void setState(State state) {
-      if (state.equals(State.STARTING)) {
-        adjustConfig();
-      }
+    protected void startInternal() throws Exception {
+      adjustConfig();
+      super.startInternal();
     }
 
     private void adjustConfig() {

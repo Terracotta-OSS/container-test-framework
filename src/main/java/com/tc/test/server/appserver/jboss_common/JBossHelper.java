@@ -19,6 +19,7 @@ import com.tc.util.runtime.Os;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -203,5 +204,48 @@ public class JBossHelper {
     }
 
     ReplaceLine.parseFile(tokens.toArray(new ReplaceLine.Token[] {}), dest);
+  }
+
+  // check that the wars in the deployment folder are deployed using the file naming convention of jboss
+  // good for jobss 7x
+  public static void waitUntilWarsDeployed(File instanceDir, long waitTime) throws Exception {
+    long timeToQuit = System.currentTimeMillis() + waitTime;
+    File deploymentsFolder = new File(instanceDir, "deployments");
+
+    while (System.currentTimeMillis() < timeToQuit) {
+      File[] isdeployingFiles = deploymentsFolder.listFiles(new FileFilter() {
+        @Override
+        public boolean accept(File pathname) {
+          return (pathname.getName().endsWith(".isdeploying"));
+        }
+      });
+      File[] deployedFiles = deploymentsFolder.listFiles(new FileFilter() {
+        @Override
+        public boolean accept(File pathname) {
+          return (pathname.getName().endsWith(".deployed"));
+        }
+      });
+      File[] failedDeployFiles = deploymentsFolder.listFiles(new FileFilter() {
+        @Override
+        public boolean accept(File pathname) {
+          return (pathname.getName().endsWith(".failed"));
+        }
+      });
+      if (isdeployingFiles == null) { throw new Exception("Deployment folder " + deploymentsFolder
+                                                          + " isn't a directory"); }
+      if (isdeployingFiles.length == 0) {
+        if (deployedFiles.length > 0) {
+          System.out.println("Successfully deployed " + deployedFiles.length + " files");
+          return;
+        }
+        if (failedDeployFiles.length > 0) {
+          System.err.println("At least one file failed to deploy, test will proceed but expect problems");
+          return;
+        }
+        // keep waiting, we likely didn't start deploying yet
+      }
+
+      Thread.sleep(1000L);
+    }
   }
 }
