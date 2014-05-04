@@ -16,6 +16,9 @@
 
   <properties>
     <terracotta.core.version>4.1.4-SNAPSHOT</terracotta.core.version>
+    <!-- remove properties below once parent pom is updated -->
+    <terracotta-nexus-staging-url>http://nexus.terracotta.eur.ad.sag/service/local/staging/deploy/maven2</terracotta-nexus-staging-url>
+    <terracotta-ee-snapshots-url>http://nexus.terracotta.eur.ad.sag/content/repositories/terracotta-ee-snapshots</terracotta-ee-snapshots-url>
   </properties>
 
   <dependencies>
@@ -75,5 +78,19 @@
       <url>http://www.terracotta.org/download/reflector/releases</url>
     </repository>
   </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>terracotta-nexus-staging</id>
+      <name>Terracotta Nexus Staging Repository</name>
+      <url>${terracotta-nexus-staging-url}</url>
+    </repository>
+    <snapshotRepository>
+      <id>terracotta-ee-snapshots</id>
+       <uniqueVersion>false</uniqueVersion>
+       <name>Terracotta EE Snapshots Repository</name>
+       <url>${terracotta-ee-snapshots-url}</url>
+    </snapshotRepository>
+  </distributionManagement>
 
 </project>
