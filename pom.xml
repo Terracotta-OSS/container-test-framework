@@ -5,17 +5,17 @@
   <parent>
     <artifactId>forge-parent</artifactId>
     <groupId>org.terracotta.forge</groupId>
-    <version>3.0</version>
+    <version>3.4</version>
     <relativePath/>
   </parent>
 
   <groupId>org.terracotta.test</groupId>
   <artifactId>container-test-framework</artifactId>
   <name>Container Test Framework</name>
-  <version>1.4.6</version>
+  <version>1.4.6.1</version>
 
   <properties>
-    <terracotta.core.version>4.0.6</terracotta.core.version>
+    <terracotta.core.version>4.0.6.1</terracotta.core.version>
   </properties>
 
   <dependencies>
