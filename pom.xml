@@ -12,10 +12,10 @@
   <groupId>org.terracotta.test</groupId>
   <artifactId>container-test-framework</artifactId>
   <name>Container Test Framework</name>
-  <version>1.4.6</version>
+  <version>1.4.6_fix1</version>
 
   <properties>
-    <terracotta.core.version>4.0.6</terracotta.core.version>
+    <terracotta.core.version>4.0.6_fix1</terracotta.core.version>
   </properties>
 
   <dependencies>
