@@ -36,7 +36,7 @@
             <!-- The server "id" element from settings to use authentication from -->
             <serverId>terracotta-nexus-staging</serverId>
             <skipNexusStagingDeployMojo>${skip.deploy}</skipNexusStagingDeployMojo>
-            <stagingProfileId></stagingProfileId>
+            <stagingProfileId/>
           </configuration>
         </plugin>
       </plugins>
@@ -119,6 +119,4 @@
       <url>${terracotta-ee-snapshots-url}</url>
     </snapshotRepository>
   </distributionManagement>
-</project>
-
 </project>
