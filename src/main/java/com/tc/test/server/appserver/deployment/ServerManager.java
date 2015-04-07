@@ -20,6 +20,7 @@ import com.tc.util.PortChooser;
 import com.tc.util.TcConfigBuilder;
 import com.tc.util.runtime.Os;
 import com.tc.util.runtime.Vm;
+import com.terracottatech.config.DataStorage;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -87,6 +88,11 @@ public class ServerManager {
     jvmArgs = extraJvmArgs;
     installation = AppServerUtil.createAppServerInstallation(factory, installDir, sandbox);
 
+    for (com.terracottatech.config.Server server : serverTcConfig.getServers()) {
+      DataStorage ds = server.addNewDataStorage();
+      ds.setSize("512m");
+      ds.addNewOffheap().setSize("512m");
+    }
     if (DEBUG_MODE) {
       serverTcConfig.setTsaPort(9510);
       serverTcConfig.setJmxPort(9520);
