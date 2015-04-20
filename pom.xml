@@ -12,10 +12,10 @@
   <groupId>org.terracotta.test</groupId>
   <artifactId>container-test-framework</artifactId>
   <name>Container Test Framework</name>
-  <version>1.4.8-SNAPSHOT</version>
+  <version>1.4.8</version>
 
   <properties>
-    <terracotta.core.version>4.0.8-SNAPSHOT</terracotta.core.version>
+    <terracotta.core.version>4.0.8</terracotta.core.version>
     <!-- remove properties below once parent pom is updated -->
     <terracotta-nexus-staging-url>http://nexus.terracotta.eur.ad.sag/service/local/staging/deploy/maven2</terracotta-nexus-staging-url>
     <terracotta-ee-snapshots-url>http://nexus.terracotta.eur.ad.sag/content/repositories/terracotta-ee-snapshots</terracotta-ee-snapshots-url>
