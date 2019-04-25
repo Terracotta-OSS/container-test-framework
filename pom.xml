@@ -105,6 +105,38 @@
     </repository>
   </repositories>
 
+  <profiles>
+    <profile>
+      <id>sag-deps</id>
+      <activation>
+        <property>
+          <name>sag-deps</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.terracotta</groupId>
+              <artifactId>maven-forge-plugin</artifactId>
+              <dependencies>
+                <!--switching to a newer forge-parent 3.x which does not define this:-->
+                <dependency>
+                  <groupId>com.softwareag.ibit.tools.util</groupId>
+                  <artifactId>finder</artifactId>
+                  <!-- Before bumping version - verify it still accepts exclusion files -->
+                  <version>3.0</version>
+                  <scope>compile</scope>
+                </dependency>
+              </dependencies>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+
   <distributionManagement>
     <repository>
       <id>terracotta-nexus-staging</id>
