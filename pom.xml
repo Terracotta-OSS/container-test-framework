@@ -19,6 +19,7 @@
     <!-- remove properties below once parent pom is updated -->
     <terracotta-nexus-staging-url>http://nexus.terracotta.eur.ad.sag/service/local/staging/deploy/maven2</terracotta-nexus-staging-url>
     <terracotta-ee-snapshots-url>http://nexus.terracotta.eur.ad.sag/content/repositories/terracotta-ee-snapshots</terracotta-ee-snapshots-url>
+    <skipSagFinder>true</skipSagFinder> <!-- this is internal, skip finder -->
   </properties>
 
   <dependencies>
@@ -104,38 +105,6 @@
       <url>http://www.terracotta.org/download/reflector/releases</url>
     </repository>
   </repositories>
-
-  <profiles>
-    <profile>
-      <id>sag-deps</id>
-      <activation>
-        <property>
-          <name>sag-deps</name>
-          <value>true</value>
-        </property>
-      </activation>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <groupId>org.terracotta</groupId>
-              <artifactId>maven-forge-plugin</artifactId>
-              <dependencies>
-                <!--switching to a newer forge-parent 3.x which does not define this:-->
-                <dependency>
-                  <groupId>com.softwareag.ibit.tools.util</groupId>
-                  <artifactId>finder</artifactId>
-                  <!-- Before bumping version - verify it still accepts exclusion files -->
-                  <version>3.0</version>
-                  <scope>compile</scope>
-                </dependency>
-              </dependencies>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
-    </profile>
-  </profiles>
 
   <distributionManagement>
     <repository>
