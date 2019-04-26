@@ -439,10 +439,10 @@ public class ServerManager {
       mappings.put("jboss-7.1.", "TerracottaJboss71xSessionFilter");
       mappings.put("jboss-7.2.", "TerracottaJboss71xSessionFilter");
       mappings.put("jboss-eap-6.1.", "TerracottaJboss71xSessionFilter");
-      mappings.put("jboss-eap-6.4.", "TerracottaJboss75xSessionFilter");
+      mappings.put("jboss-eap-6.4.", "TerracottaJboss71xSessionFilter");
       mappings.put("weblogic-10.3.", "TerracottaWeblogic103xSessionFilter");
       mappings.put("weblogic-12.1", "TerracottaWeblogic121xSessionFilter");
-      mappings.put("weblogic-12.2", "TerracottaWeblogic122xSessionFilter");
+      mappings.put("weblogic-12.2", "TerracottaWeblogic121xSessionFilter");
       mappings.put("jetty-6.1.", "TerracottaJetty61xSessionFilter");
       mappings.put("jetty-7.4.", "TerracottaJetty74xSessionFilter");
       mappings.put("jetty-7.6.", "TerracottaJetty76xSessionFilter");
